@@ -429,16 +429,7 @@
         .mapboxgl-ctrl-bottom-right { display: none !important; }
         .asset-location-hud, .alh-leader { display: none !important; }
 
-        /* ── TRUCK MARKERS ── */
-        .truck-marker {
-            width: 28px; height: 28px;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 1.2s ease;
-            pointer-events: none;
-            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.9));
-        }
-        .truck-marker.visible { opacity: 1; }
-        .truck-marker svg { width: 22px; height: 22px; }
+
     </style>
 </head>
 <body>
@@ -568,7 +559,7 @@
             "underwood": { sub: "Homebush", coords: [151.0764, -33.8672], zoom: 17, bearing: 15, pitch: 65, title: "7-9 Underwood St", zone: "IN1", yield: "5.8%", status: "leased", photo: "", desc: "High-clearance logistics facility modernization featuring automated docking integration.", cgis: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1430285561322-780c60ea3f5d?auto=format&fit=crop&w=1600&q=80"] },
             "carter": { sub: "Lidcombe", coords: [151.0595, -33.8608], zoom: 17, bearing: 45, pitch: 65, title: "8 Carter St", zone: "E4", yield: "6.1%", status: "under-offer", photo: "", desc: "Last-mile distribution hub concept. Design options explore corporate mezzanine office additions.", cgis: ["https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80"] },
             "orion": { sub: "Lane Cove", coords: [151.1495, -33.8081], zoom: 17, bearing: 90, pitch: 65, title: "7-9 Orion Rd", zone: "IN2", yield: "6.0%", status: "available", photo: "", desc: "Premium tech-park aesthetic with curtain wall glazing updates to attract life-science tenants.", cgis: ["https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80"] },
-            "parramatta": { sub: "Lidcombe", coords: [151.0540, -33.8664], zoom: 17, bearing: 90, pitch: 65, title: "11 Parramatta Rd", zone: "IN2", yield: "6.0%", status: "available", photo: "", desc: "Premium industrial facility with excellent arterial road access and last-mile distribution potential.", cgis: ["https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80"] },
+            "parramatta": { sub: "Lidcombe", coords: [151.0480, -33.8720], zoom: 17, bearing: 90, pitch: 65, title: "11 Parramatta Rd", zone: "IN2", yield: "6.0%", status: "available", photo: "", desc: "Premium industrial facility with excellent arterial road access and last-mile distribution potential.", cgis: ["https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80"] },
             "belmore": { sub: "Riverwood", coords: [151.0580, -33.9480], zoom: 17, bearing: -30, pitch: 65, title: "70 Belmore Rd", zone: "IN2", yield: "6.3%", status: "available", photo: "", desc: "Inner-south Sydney industrial asset with strong transport links and urban infill logistics opportunity.", cgis: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1430285561322-780c60ea3f5d?auto=format&fit=crop&w=1600&q=80"] },
             "bronti": { sub: "Mascot", coords: [151.1880, -33.9285], zoom: 17, bearing: 20, pitch: 65, title: "2 Bronti St", zone: "E4", yield: "6.5%", status: "under-offer", photo: "", desc: "Airport-adjacent last-mile distribution asset offering exceptional time-critical freight connectivity.", cgis: ["https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80"] },
             "victoria": { sub: "Wetherill Park", coords: [150.9025, -33.8385], zoom: 17, bearing: 0, pitch: 65, title: "511 Victoria Rd", zone: "IN1", yield: "6.4%", status: "available", photo: "", desc: "Strategic Western Sydney logistics node with M7 motorway access and large-format warehousing.", cgis: ["https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80"] },
@@ -750,7 +741,7 @@
                     el.querySelectorAll('.prop-circle').forEach(n => { n.style.opacity = '1'; });
                 });
                 setViewLevel('sydney');
-                map.once('moveend', () => { startTrucks(); });
+                map.once('moveend', () => {});
             } else if (viewLevel === 'sydney') {
                 location.reload();
             }
@@ -794,7 +785,7 @@
                 'filter': ['==', ['get', 'class'], 'motorway'],
                 'layout': { 'line-cap': 'round', 'line-join': 'round' },
                 'paint': {
-                    'line-color': '#c8a882',  // warm parchment — sophisticated, not garish
+                    'line-color': '#8B1A1A',  // deep red
                     'line-opacity': 0,
                     'line-opacity-transition': { duration: 2500 },
                     'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 13, 1.5]
@@ -826,7 +817,7 @@
                     'text-allow-overlap': true, 'text-ignore-placement': true
                 },
                 'paint': { 
-                    'text-color': '#c8a882', 'text-halo-color': 'rgba(0,0,0,0.7)', 'text-halo-width': 1.5,
+                    'text-color': '#8B1A1A', 'text-halo-color': 'rgba(0,0,0,0.7)', 'text-halo-width': 1.5,
                     'text-opacity': 0, 'text-opacity-transition': { duration: 2000 },
                     'text-halo-opacity': 0, 'text-halo-opacity-transition': { duration: 2000 }
                 }
@@ -844,83 +835,7 @@
 
         // Building toggle removed
 
-        // ── TRUCK ANIMATION SYSTEM ────────────────────────────
-        const truckSVGIcon = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#ff722f" d="M20,8H17V4H3C1.89,4 1,4.89 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8M6,18.5C5.17,18.5 4.5,17.83 4.5,17C4.5,16.17 5.17,15.5 6,15.5C6.83,15.5 7.5,16.17 7.5,17C7.5,17.83 6.83,18.5 6,18.5M18,18.5C17.17,18.5 16.5,17.83 16.5,17C16.5,16.17 17.17,15.5 18,15.5C18.83,15.5 19.5,16.17 19.5,17C19.5,17.83 18.83,18.5 18,18.5M17,12V9.5H19.5L21.47,12H17Z"/></svg>`;
 
-        const truckRouteDefs = [
-            { coords: [[150.900,-33.960],[150.892,-33.940],[150.889,-33.900],[150.887,-33.870],[150.884,-33.836],[150.883,-33.810],[150.882,-33.792],[150.881,-33.760],[150.882,-33.720]], speed: 90, offset: 0.0 },
-            { coords: [[150.882,-33.720],[150.881,-33.760],[150.882,-33.792],[150.883,-33.810],[150.884,-33.836],[150.887,-33.870],[150.889,-33.900],[150.892,-33.940],[150.900,-33.960]], speed: 85, offset: 0.55 },
-            { coords: [[151.149,-33.808],[151.100,-33.808],[151.060,-33.810],[151.020,-33.812],[150.980,-33.814],[150.940,-33.816],[150.881,-33.820]], speed: 95, offset: 0.25 },
-            { coords: [[150.881,-33.820],[150.940,-33.816],[150.980,-33.814],[151.020,-33.812],[151.060,-33.810],[151.100,-33.808],[151.149,-33.808]], speed: 100, offset: 0.7 },
-            { coords: [[150.900,-33.960],[150.940,-33.930],[150.980,-33.910],[151.020,-33.895],[151.039,-33.892],[151.080,-33.890],[151.120,-33.910],[151.175,-33.940]], speed: 88, offset: 0.4 },
-            { coords: [[151.175,-33.940],[151.120,-33.910],[151.080,-33.890],[151.039,-33.892],[151.020,-33.895],[150.980,-33.910],[150.940,-33.930],[150.900,-33.960]], speed: 82, offset: 0.85 }
-        ];
-
-        let truckState = null; // null until startTrucks() called
-        let truckRafId = null;
-
-        function startTrucks() {
-            // Tear down any existing trucks first
-            stopTrucks();
-
-            // Build turf lines
-            const lines = truckRouteDefs.map(r => {
-                const line = turf.lineString(r.coords);
-                const len  = turf.length(line, { units: 'kilometers' });
-                return { line, len };
-            });
-
-            // Progress: offset fraction * route length
-            const progress = truckRouteDefs.map((r, i) => r.offset * lines[i].len);
-
-            // Create markers at their correct starting positions
-            const markers = truckRouteDefs.map((r, i) => {
-                const startPt = turf.along(lines[i].line, progress[i], { units: 'kilometers' });
-                const el = document.createElement('div');
-                el.className = 'truck-marker visible';
-                el.innerHTML = truckSVGIcon;
-                const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-                    .setLngLat(startPt.geometry.coordinates)
-                    .addTo(map);
-                return { el, marker };
-            });
-
-            truckState = { lines, progress, markers };
-
-            // 600x speed multiplier so trucks are visibly moving at city zoom
-            const KM_PER_MS = 600 / 3600000;
-            let lastTs = null;
-
-            function tick(ts) {
-                if (!truckState) return;
-                const delta = lastTs === null ? 16 : Math.min(ts - lastTs, 100);
-                lastTs = ts;
-
-                truckRouteDefs.forEach((r, i) => {
-                    const { line, len } = truckState.lines[i];
-                    truckState.progress[i] = (truckState.progress[i] + r.speed * KM_PER_MS * delta) % len;
-                    const d = truckState.progress[i];
-
-                    const pt    = turf.along(line, d, { units: 'kilometers' });
-                    const ahead = turf.along(line, Math.min(d + 0.08, len - 0.001), { units: 'kilometers' });
-                    const bearing = turf.bearing(pt, ahead);
-
-                    truckState.markers[i].marker.setLngLat(pt.geometry.coordinates);
-                    truckState.markers[i].el.style.transform = `rotate(${bearing}deg)`;
-                });
-
-                truckRafId = requestAnimationFrame(tick);
-            }
-            truckRafId = requestAnimationFrame(tick);
-        }
-
-        function stopTrucks() {
-            if (truckRafId) { cancelAnimationFrame(truckRafId); truckRafId = null; }
-            if (truckState) {
-                truckState.markers.forEach(t => t.marker.remove());
-                truckState = null;
-            }
-        }
         let pulseTimers = [];
         let currentPulseCoords = null;
         let pulseRafId = null;
@@ -1114,7 +1029,6 @@
                 } catch(e) {}
                 document.getElementById('shortcutLegend') && document.getElementById('shortcutLegend').classList.add('visible');
                 setViewLevel('sydney');
-                startTrucks();
             }, 14500);
             setTimeout(() => { sequenceRunning = false; }, 16000);
         }
@@ -1290,7 +1204,6 @@
             stopRotation();
             stopSonarPulse();
             stopCardTracking();
-            stopTrucks();
 
             // FIX: clear photo + distances immediately so previous asset doesn't linger
             const card = document.getElementById('assetCard');
@@ -1414,7 +1327,7 @@
                     'filter': ['==', ['get', 'class'], 'motorway'],
                     'layout': { 'line-cap': 'round', 'line-join': 'round' },
                     'paint': {
-                        'line-color': '#c8a882',
+                        'line-color': '#8B1A1A',
                         'line-opacity': lineOpacity,
                         'line-opacity-transition': { duration: 2500 },
                         'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 13, 1.5]
@@ -1434,7 +1347,7 @@
                 map.addLayer({
                     'id': 'highway-labels', 'type': 'symbol', 'source': 'custom-highway-labels',
                     'layout': { 'text-field': ['get', 'label'], 'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'], 'text-size': 15, 'text-anchor': 'center', 'text-allow-overlap': true, 'text-ignore-placement': true },
-                    'paint': { 'text-color': '#c8a882', 'text-halo-color': 'rgba(0,0,0,0.7)', 'text-halo-width': 1.5, 'text-opacity': labelOpacity, 'text-halo-opacity': labelOpacity }
+                    'paint': { 'text-color': '#8B1A1A', 'text-halo-color': 'rgba(0,0,0,0.7)', 'text-halo-width': 1.5, 'text-opacity': labelOpacity, 'text-halo-opacity': labelOpacity }
                 });
                 if (!map.getSource('custom-highlight')) {
                     map.addSource('custom-highlight', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
