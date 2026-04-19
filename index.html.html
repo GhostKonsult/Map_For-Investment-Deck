@@ -158,6 +158,27 @@
             padding-bottom: 10px;
         }
         .acquired-list { display: flex; flex-direction: column; gap: 6px; }
+
+        /* ── LOCATION / TRANSPORT PANEL ── */
+        .location-panel { display: none; flex-direction: column; gap: 0; }
+        .acquired-panel.asset-view .panel-default-content { display: none; }
+        .acquired-panel.asset-view .location-panel { display: flex; }
+        .loc-asset-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; background: var(--accent); color: #fff;
+            font-size: 14px; font-weight: 800; border-radius: 0; margin-bottom: 12px;
+        }
+        .loc-title { font-size: 22px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.15; margin: 0 0 6px 0; }
+        .loc-address { font-size: 9px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin: 0 0 20px 0; padding-bottom: 16px; border-bottom: 1px solid var(--border-light); }
+        .loc-section-title { color: var(--text-muted); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 10px 0; }
+        .loc-list { display: flex; flex-direction: column; gap: 2px; margin-bottom: 20px; }
+        .loc-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--bg-card); border-left: 2px solid transparent; transition: border-color 0.2s; }
+        .loc-item:hover { border-left-color: var(--accent); background: var(--bg-card-hover); }
+        .loc-item-left { display: flex; align-items: center; gap: 10px; }
+        .loc-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.7; }
+        .loc-icon svg { width: 16px; height: 16px; fill: var(--text-muted); }
+        .loc-name { font-size: 11px; font-weight: 600; color: var(--text-main); }
+        .loc-dist { font-size: 10px; font-weight: 800; color: var(--accent); background: rgba(255,114,47,0.1); border: 1px solid rgba(255,114,47,0.25); padding: 2px 7px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
         
         .acquired-item {
             display: flex; align-items: center; padding: 10px 12px; border-radius: 0;
@@ -441,47 +462,59 @@
 
     <div class="acquired-panel glass" id="acquiredPanel">
         <img src="BoxCapitalLogo.png" alt="Box Capital" class="panel-logo">
-        <h3 class="acquired-title">Acquired Assets</h3>
-        <div class="acquired-list" id="acquiredList"></div>
 
-        <h3 class="acquired-title" style="margin-top:24px;">Key Logistics Infrastructure</h3>
-        <div class="infra-list">
-            <div class="infra-item" id="infra-airport-syd">
-                <img src="Airport_icon.png" class="infra-icon" alt="Airport">
-                <div class="infra-details">
-                    <div class="infra-name">Sydney International Airport</div>
-                    <div class="infra-sub">Kingsford Smith</div>
+        <!-- DEFAULT VIEW -->
+        <div class="panel-default-content">
+            <h3 class="acquired-title">Acquired Assets</h3>
+            <div class="acquired-list" id="acquiredList"></div>
+            <h3 class="acquired-title" style="margin-top:24px;">Key Logistics Infrastructure</h3>
+            <div class="infra-list">
+                <div class="infra-item" id="infra-airport-syd">
+                    <img src="Airport_icon.png" class="infra-icon" alt="Airport">
+                    <div class="infra-details">
+                        <div class="infra-name">Sydney International Airport</div>
+                        <div class="infra-sub">Kingsford Smith</div>
+                    </div>
+                    <div class="infra-dist" id="dist-airport-syd"></div>
                 </div>
-                <div class="infra-dist" id="dist-airport-syd"></div>
-            </div>
-            <div class="infra-item" id="infra-airport-wsyd">
-                <img src="Airport_icon.png" class="infra-icon" alt="Airport">
-                <div class="infra-details">
-                    <div class="infra-name">Western Sydney Airport</div>
-                    <div class="infra-sub">Nancy-Bird Walton</div>
+                <div class="infra-item" id="infra-airport-wsyd">
+                    <img src="Airport_icon.png" class="infra-icon" alt="Airport">
+                    <div class="infra-details">
+                        <div class="infra-name">Western Sydney Airport</div>
+                        <div class="infra-sub">Nancy-Bird Walton</div>
+                    </div>
+                    <div class="infra-dist" id="dist-airport-wsyd"></div>
                 </div>
-                <div class="infra-dist" id="dist-airport-wsyd"></div>
-            </div>
-            <div class="infra-item" id="infra-port">
-                <img src="port_icon.png" class="infra-icon" alt="Port">
-                <div class="infra-details">
-                    <div class="infra-name">Port Botany</div>
-                    <div class="infra-sub">Container Terminal</div>
+                <div class="infra-item" id="infra-port">
+                    <img src="port_icon.png" class="infra-icon" alt="Port">
+                    <div class="infra-details">
+                        <div class="infra-name">Port Botany</div>
+                        <div class="infra-sub">Container Terminal</div>
+                    </div>
+                    <div class="infra-dist" id="dist-port"></div>
                 </div>
-                <div class="infra-dist" id="dist-port"></div>
-            </div>
-            <div class="infra-item" id="infra-moorebank">
-                <img src="train_icon.png" class="infra-icon" alt="Train">
-                <div class="infra-details">
-                    <div class="infra-name">Moorebank Terminal</div>
-                    <div class="infra-sub">Intermodal Freight</div>
+                <div class="infra-item" id="infra-moorebank">
+                    <img src="train_icon.png" class="infra-icon" alt="Train">
+                    <div class="infra-details">
+                        <div class="infra-name">Moorebank Terminal</div>
+                        <div class="infra-sub">Intermodal Freight</div>
+                    </div>
+                    <div class="infra-dist" id="dist-moorebank"></div>
                 </div>
-                <div class="infra-dist" id="dist-moorebank"></div>
             </div>
         </div>
 
+        <!-- ASSET VIEW: location / transport -->
+        <div class="location-panel" id="locationPanel">
+            <div class="loc-asset-num" id="locAssetNum">1</div>
+            <h2 class="loc-title" id="locTitle">&#8212;</h2>
+            <p class="loc-address" id="locAddress">&#8212;</p>
+            <p class="loc-section-title">Location / Transport</p>
+            <div class="loc-list" id="locList"></div>
+        </div>
+
         <button class="back-btn" id="backBtn">
-            <span class="back-arrow">←</span>
+            <span class="back-arrow">&#8592;</span>
             <span id="backLabel">Back to Sydney</span>
         </button>
     </div>
@@ -555,16 +588,185 @@
 
         let currentAppView = 'macro'; 
 
+        // Addresses geocoded at runtime via Mapbox API — no hardcoded coords
         const propertyData = {
-            "underwood": { sub: "Homebush", coords: [151.0833, -33.8583], zoom: 17, bearing: 15, pitch: 65, title: "7-9 Underwood St", zone: "IN1", yield: "5.8%", status: "leased", photo: "underwood_photo.png", desc: "High-clearance logistics facility modernization featuring automated docking integration.", cgis: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1430285561322-780c60ea3f5d?auto=format&fit=crop&w=1600&q=80"] },
-            "carter": { sub: "Lidcombe", coords: [151.0672, -33.8421], zoom: 17, bearing: 45, pitch: 65, title: "8 Carter St", zone: "E4", yield: "6.1%", status: "under-offer", photo: "", desc: "Last-mile distribution hub concept. Design options explore corporate mezzanine office additions.", cgis: ["https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80"] },
-            "orion": { sub: "Lane Cove", coords: [151.1647, -33.8179], zoom: 17, bearing: 90, pitch: 65, title: "7-9 Orion Rd", zone: "IN2", yield: "6.0%", status: "available", photo: "", desc: "Premium tech-park aesthetic with curtain wall glazing updates to attract life-science tenants.", cgis: ["https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80"] },
-            "parramatta": { sub: "Lidcombe", coords: [151.0618, -33.8653], zoom: 17, bearing: 90, pitch: 65, title: "11 Parramatta Rd", zone: "IN2", yield: "6.0%", status: "available", photo: "", desc: "Premium industrial facility with excellent arterial road access and last-mile distribution potential.", cgis: ["https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80"] },
-            "belmore": { sub: "Riverwood", coords: [151.0571, -33.9515], zoom: 17, bearing: -30, pitch: 65, title: "70 Belmore Rd", zone: "IN2", yield: "6.3%", status: "available", photo: "", desc: "Inner-south Sydney industrial asset with strong transport links and urban infill logistics opportunity.", cgis: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1430285561322-780c60ea3f5d?auto=format&fit=crop&w=1600&q=80"] },
-            "bronti": { sub: "Mascot", coords: [151.1985, -33.9301], zoom: 17, bearing: 20, pitch: 65, title: "2 Bronti St", zone: "E4", yield: "6.5%", status: "under-offer", photo: "", desc: "Airport-adjacent last-mile distribution asset offering exceptional time-critical freight connectivity.", cgis: ["https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80"] },
-            "victoria": { sub: "Wetherill Park", coords: [150.8958, -33.8372], zoom: 17, bearing: 0, pitch: 65, title: "511 Victoria Rd", zone: "IN1", yield: "6.4%", status: "available", photo: "", desc: "Strategic Western Sydney logistics node with M7 motorway access and large-format warehousing.", cgis: ["https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80"] },
-            "welder": { sub: "Seven Hills", coords: [150.9428, -33.7731], zoom: 17, bearing: -15, pitch: 65, title: "1-3 Welder St", zone: "IN1", yield: "5.9%", status: "available", photo: "", desc: "North-west Sydney industrial holding with excellent M2/M7 interchange access for metro distribution.", cgis: ["https://images.unsplash.com/photo-1504307651254-35680f356f12?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80"] }
+            "underwood": { sub: "Homebush",      geocodeAddress: "7-9 Underwood Road, Homebush NSW 2140, Australia",       coords: [151.0833,-33.8583], zoom: 17, bearing: 15,  pitch: 65, title: "7-9 Underwood St",  zone: "IN1", yield: "5.8%", status: "leased",      photo: "underwood_photo.png", desc: "High-clearance logistics facility modernization featuring automated docking integration.",                              cgis: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80","https://images.unsplash.com/photo-1430285561322-780c60ea3f5d?auto=format&fit=crop&w=1600&q=80"] },
+            "carter":    { sub: "Lidcombe",      geocodeAddress: "8 Carter Street, Lidcombe NSW 2141, Australia",           coords: [151.0672,-33.8421], zoom: 17, bearing: 45,  pitch: 65, title: "8 Carter St",       zone: "E4",  yield: "6.1%", status: "under-offer", photo: "",                    desc: "Last-mile distribution hub concept. Design options explore corporate mezzanine office additions.",                     cgis: ["https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1600&q=80","https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80"] },
+            "orion":     { sub: "Lane Cove",     geocodeAddress: "7-9 Orion Road, Lane Cove West NSW 2066, Australia",      coords: [151.1647,-33.8179], zoom: 17, bearing: 90,  pitch: 65, title: "7-9 Orion Rd",      zone: "IN2", yield: "6.0%", status: "available",    photo: "",                    desc: "Premium tech-park aesthetic with curtain wall glazing updates to attract life-science tenants.",                       cgis: ["https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80","https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80"] },
+            "parramatta":{ sub: "Lidcombe",      geocodeAddress: "11 Parramatta Road, Lidcombe NSW 2141, Australia",        coords: [151.0618,-33.8653], zoom: 17, bearing: 90,  pitch: 65, title: "11 Parramatta Rd",  zone: "IN2", yield: "6.0%", status: "available",    photo: "",                    desc: "Premium industrial facility with excellent arterial road access and last-mile distribution potential.",                cgis: ["https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80","https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80"] },
+            "belmore":   { sub: "Riverwood",     geocodeAddress: "70 Belmore Road, Riverwood NSW 2210, Australia",          coords: [151.0571,-33.9515], zoom: 17, bearing: -30, pitch: 65, title: "70 Belmore Rd",     zone: "IN2", yield: "6.3%", status: "available",    photo: "",                    desc: "Inner-south Sydney industrial asset with strong transport links and urban infill logistics opportunity.",              cgis: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80","https://images.unsplash.com/photo-1430285561322-780c60ea3f5d?auto=format&fit=crop&w=1600&q=80"] },
+            "bronti":    { sub: "Mascot",        geocodeAddress: "2 Bronti Street, Mascot NSW 2020, Australia",             coords: [151.1985,-33.9301], zoom: 17, bearing: 20,  pitch: 65, title: "2 Bronti St",       zone: "E4",  yield: "6.5%", status: "under-offer", photo: "",                    desc: "Airport-adjacent last-mile distribution asset offering exceptional time-critical freight connectivity.",               cgis: ["https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80","https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80"] },
+            "victoria":  { sub: "Wetherill Park",geocodeAddress: "511 Victoria Road, Wetherill Park NSW 2164, Australia",   coords: [150.8958,-33.8372], zoom: 17, bearing: 0,   pitch: 65, title: "511 Victoria Rd",  zone: "IN1", yield: "6.4%", status: "available",    photo: "",                    desc: "Strategic Western Sydney logistics node with M7 motorway access and large-format warehousing.",                       cgis: ["https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80","https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80"] },
+            "welder":    { sub: "Seven Hills",   geocodeAddress: "1-3 Welder Road, Seven Hills NSW 2147, Australia",        coords: [150.9428,-33.7731], zoom: 17, bearing: -15, pitch: 65, title: "1-3 Welder St",    zone: "IN1", yield: "5.9%", status: "available",    photo: "",                    desc: "North-west Sydney industrial holding with excellent M2/M7 interchange access for metro distribution.",                cgis: ["https://images.unsplash.com/photo-1504307651254-35680f356f12?auto=format&fit=crop&w=1600&q=80","https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80"] }
         };
+
+        // ── GEOCODE all assets via Mapbox at startup, update coords in place ──
+        async function geocodeAllAssets() {
+            const token = mapboxgl.accessToken;
+            const keys = Object.keys(propertyData);
+            await Promise.all(keys.map(async key => {
+                const addr = propertyData[key].geocodeAddress;
+                if (!addr) return;
+                try {
+                    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(addr)}.json?access_token=${token}&country=AU&limit=1`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    if (data.features && data.features.length > 0) {
+                        propertyData[key].coords = data.features[0].center;
+                        console.log(`✓ ${key}: ${data.features[0].center} — ${data.features[0].place_name}`);
+                    } else {
+                        console.warn(`✗ ${key}: no result for "${addr}"`);
+                    }
+                } catch(e) {
+                    console.warn(`✗ ${key}: geocode error`, e);
+                }
+            }));
+        }
+
+        // ── LOCATION / TRANSPORT DATA ──
+        const ICONS = {
+            mall:     '<svg viewBox="0 0 24 24"><path d="M19 6H17.9C17.5 4.3 16.4 2.9 15 2.2V2H13V2.1C12.7 2 12.3 2 12 2C11.7 2 11.3 2 11 2.1V2H9V2.2C7.6 2.9 6.5 4.3 6.1 6H5C3.9 6 3 6.9 3 8V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V8C21 6.9 20.1 6 19 6M12 4C13.9 4 15.5 5.3 16.1 7H7.9C8.5 5.3 10.1 4 12 4M19 19H5V8H19V19Z"/></svg>',
+            motorway: '<svg viewBox="0 0 24 24"><path d="M1.5 4V5.5C1.5 5.5 2 10 3 11.5C3.7 12.5 4.5 13 5.5 13V19H7V13C7.5 13 8 13 8.5 12.5L10 11H14L15.5 12.5C16 13 16.5 13 17 13V19H18.5V13C19.5 13 20.3 12.5 21 11.5C22 10 22.5 5.5 22.5 5.5V4H1.5M3 5.5H5V10C4.4 9.5 3.8 8.5 3.3 7L3 5.5M6.5 5.5H11V10.5H9L6.5 8V5.5M12.5 5.5H17L14.5 8H13V10.5H12.5V5.5M19 5.5H21L20.7 7C20.2 8.5 19.6 9.5 19 10V5.5Z"/></svg>',
+            road:     '<svg viewBox="0 0 24 24"><path d="M9.5 3L8 11H4V13H7.6L7 17H3V19H6.6L6 23H8L8.6 19H15.4L16 23H18L17.4 19H21V17H17L16.4 13H20V11H16L14.5 3H9.5M11.1 5H12.9L14.1 11H9.9L11.1 5M9.6 13H14.4L15 17H9L9.6 13Z"/></svg>',
+            metro:    '<svg viewBox="0 0 24 24"><path d="M12 2C8.1 2 5 5.1 5 9V17L3 19V20H21V19L19 17V9C19 5.1 15.9 2 12 2M12 4C14.8 4 17 6.2 17 9V15H7V9C7 6.2 9.2 4 12 4M9 17H11V19H9V17M13 17H15V19H13V17Z"/></svg>',
+            train:    '<svg viewBox="0 0 24 24"><path d="M12 2C8 2 4 2.5 4 6V16C4 18.2 5.8 20 8 20L6 22V23H18V22L16 20C18.2 20 20 18.2 20 16V6C20 2.5 16.4 2 12 2M12 4C15.9 4 17.1 4.5 17.6 5H6.4C6.9 4.5 8.1 4 12 4M6 7H11V11H6V7M13 7H18V11H13V7M8 13C8.6 13 9 13.4 9 14S8.6 15 8 15 7 14.6 7 14 7.4 13 8 13M16 13C16.6 13 17 13.4 17 14S16.6 15 16 15 15 14.6 15 14 15.4 13 16 13Z"/></svg>',
+            market:   '<svg viewBox="0 0 24 24"><path d="M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3Z"/></svg>',
+            hospital: '<svg viewBox="0 0 24 24"><path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M17 13H13V17H11V13H7V11H11V7H13V11H17V13Z"/></svg>',
+            park:     '<svg viewBox="0 0 24 24"><path d="M17 12H13V7H11V12H7L12 17L17 12M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M12 20C7.6 20 4 16.4 4 12S7.6 4 12 4 20 7.6 20 12 16.4 20 12 20Z"/></svg>',
+            port:     '<svg viewBox="0 0 24 24"><path d="M20 21V19H13V12H15V10H13V4H14V2H10V4H11V10H9V12H11V19H4V21H20M10 12H14V13.6L12 15L10 13.6V12Z"/></svg>',
+            airport:  '<svg viewBox="0 0 24 24"><path d="M21 16V14L13 9V3.5C13 2.7 12.3 2 11.5 2S10 2.7 10 3.5V9L2 14V16L10 13.5V19L8 20.5V22L11.5 21L15 22V20.5L13 19V13.5L21 16Z"/></svg>',
+            estate:   '<svg viewBox="0 0 24 24"><path d="M5 3V21H19V3H5M13 19H11V17H13V19M13 15H11V9H13V15Z"/></svg>'
+        };
+
+        const locationData = {
+            "underwood": {
+                address: "7-9 Underwood Street, Homebush",
+                items: [
+                    { icon: "mall",     name: "Direct Factory Outlet Mall",      dist: "0.1km" },
+                    { icon: "motorway", name: "M4 Access",                        dist: "0.5km" },
+                    { icon: "road",     name: "Centenary Drive",                  dist: "0.5km" },
+                    { icon: "metro",    name: "Metro Rail Sydney Olympic Park",    dist: "1.5km" },
+                    { icon: "metro",    name: "Metro Rail North Strathfield",      dist: "1.5km" },
+                    { icon: "train",    name: "Concord West Train Station",        dist: "1.6km" },
+                    { icon: "market",   name: "Sydney Markets",                   dist: "2.0km" },
+                    { icon: "hospital", name: "Concord General Hospital",         dist: "3.3km" }
+                ]
+            },
+            "carter": {
+                address: "8 Carter Street, Lidcombe",
+                items: [
+                    { icon: "metro",    name: "Olympic Park Train Station",       dist: "0.6km" },
+                    { icon: "train",    name: "Lidcombe Train Station",            dist: "1.2km" },
+                    { icon: "motorway", name: "M4 Access (Homebush Bay Dr)",       dist: "1.5km" },
+                    { icon: "mall",     name: "Direct Factory Outlet Homebush",    dist: "1.8km" },
+                    { icon: "estate",   name: "Sydney Olympic Park",              dist: "0.8km" },
+                    { icon: "road",     name: "Homebush Bay Drive",               dist: "0.3km" },
+                    { icon: "market",   name: "Sydney Markets Flemington",        dist: "3.5km" },
+                    { icon: "airport",  name: "Sydney Airport (Kingsford Smith)", dist: "14.0km" }
+                ]
+            },
+            "orion": {
+                address: "7-9 Orion Road, Lane Cove West",
+                items: [
+                    { icon: "motorway", name: "M2 Motorway Access",               dist: "1.2km" },
+                    { icon: "road",     name: "Epping Road",                      dist: "0.3km" },
+                    { icon: "road",     name: "Lane Cove Road",                   dist: "0.5km" },
+                    { icon: "train",    name: "Chatswood Train Station",           dist: "3.5km" },
+                    { icon: "train",    name: "Artarmon Train Station",            dist: "3.2km" },
+                    { icon: "motorway", name: "Gore Hill Freeway",                dist: "1.8km" },
+                    { icon: "hospital", name: "Royal North Shore Hospital",       dist: "4.0km" },
+                    { icon: "airport",  name: "Sydney Airport (Kingsford Smith)", dist: "20.0km" }
+                ]
+            },
+            "parramatta": {
+                address: "11 Parramatta Road, Lidcombe",
+                items: [
+                    { icon: "road",     name: "Parramatta Road (A22)",            dist: "0.1km" },
+                    { icon: "train",    name: "Lidcombe Train Station",            dist: "1.0km" },
+                    { icon: "motorway", name: "M4 Motorway Access",               dist: "1.2km" },
+                    { icon: "metro",    name: "Olympic Park Train Station",       dist: "2.0km" },
+                    { icon: "mall",     name: "Lidcombe Shopping Centre",         dist: "1.5km" },
+                    { icon: "market",   name: "Sydney Markets Flemington",        dist: "3.2km" },
+                    { icon: "hospital", name: "Auburn Hospital",                  dist: "3.0km" },
+                    { icon: "airport",  name: "Sydney Airport (Kingsford Smith)", dist: "13.5km" }
+                ]
+            },
+            "belmore": {
+                address: "70 Belmore Road, Riverwood",
+                items: [
+                    { icon: "train",    name: "Riverwood Train Station (T8)",     dist: "0.1km" },
+                    { icon: "train",    name: "Mortdale Train Station",            dist: "1.2km" },
+                    { icon: "motorway", name: "M5 Motorway Access",               dist: "2.5km" },
+                    { icon: "road",     name: "King Georges Road",                dist: "1.0km" },
+                    { icon: "train",    name: "Punchbowl Train Station (T3)",      dist: "2.8km" },
+                    { icon: "hospital", name: "Hurstville Private Hospital",      dist: "3.5km" },
+                    { icon: "market",   name: "Hurstville Westfield",             dist: "4.0km" },
+                    { icon: "airport",  name: "Sydney Airport (Kingsford Smith)", dist: "10.5km" }
+                ]
+            },
+            "bronti": {
+                address: "2 Bronti Street, Mascot",
+                items: [
+                    { icon: "airport",  name: "Sydney Airport (Kingsford Smith)", dist: "0.8km" },
+                    { icon: "train",    name: "Mascot Train Station",              dist: "0.6km" },
+                    { icon: "road",     name: "Botany Road",                      dist: "0.3km" },
+                    { icon: "motorway", name: "M8 (Airport Tunnel) Access",       dist: "1.2km" },
+                    { icon: "port",     name: "Port Botany Container Terminal",   dist: "5.5km" },
+                    { icon: "train",    name: "Green Square Train Station",        dist: "2.5km" },
+                    { icon: "hospital", name: "Prince of Wales Hospital",         dist: "6.0km" },
+                    { icon: "road",     name: "Southern Cross Drive (A3)",        dist: "1.5km" }
+                ]
+            },
+            "victoria": {
+                address: "511 Victoria Road, Wetherill Park",
+                items: [
+                    { icon: "motorway", name: "M7 Motorway Access",               dist: "1.0km" },
+                    { icon: "road",     name: "Victoria Road",                    dist: "0.1km" },
+                    { icon: "motorway", name: "M4 Motorway Access",               dist: "4.5km" },
+                    { icon: "train",    name: "Cabramatta Train Station",          dist: "4.0km" },
+                    { icon: "market",   name: "Wetherill Park Retail Precinct",   dist: "1.5km" },
+                    { icon: "estate",   name: "Wetherill Park Industrial Estate", dist: "0.5km" },
+                    { icon: "hospital", name: "Liverpool Hospital",               dist: "7.0km" },
+                    { icon: "airport",  name: "Western Sydney Airport (NBW)",     dist: "18.0km" }
+                ]
+            },
+            "welder": {
+                address: "1-3 Welder Road, Seven Hills",
+                items: [
+                    { icon: "train",    name: "Seven Hills Train Station",         dist: "0.8km" },
+                    { icon: "motorway", name: "M2 Motorway Access",               dist: "1.5km" },
+                    { icon: "motorway", name: "M7 Motorway Access",               dist: "2.5km" },
+                    { icon: "road",     name: "Old Windsor Road",                 dist: "0.5km" },
+                    { icon: "train",    name: "Blacktown Train Station",           dist: "3.5km" },
+                    { icon: "market",   name: "Blacktown Westpoint",              dist: "3.8km" },
+                    { icon: "hospital", name: "Blacktown Hospital",               dist: "4.5km" },
+                    { icon: "airport",  name: "Western Sydney Airport (NBW)",     dist: "22.0km" }
+                ]
+            }
+        };
+
+        function showLocationPanel(propertyKey, assetNum) {
+            const loc = locationData[propertyKey];
+            if (!loc) return;
+            document.getElementById('locAssetNum').textContent = assetNum;
+            document.getElementById('locTitle').textContent = propertyData[propertyKey].title;
+            document.getElementById('locAddress').textContent = loc.address;
+            const listEl = document.getElementById('locList');
+            listEl.innerHTML = loc.items.map(item => `
+                <div class="loc-item">
+                    <div class="loc-item-left">
+                        <div class="loc-icon">${ICONS[item.icon] || ICONS.road}</div>
+                        <span class="loc-name">${item.name}</span>
+                    </div>
+                    <span class="loc-dist">${item.dist}</span>
+                </div>
+            `).join('');
+            document.getElementById('acquiredPanel').classList.add('asset-view');
+        }
+
+        function hideLocationPanel() {
+            document.getElementById('acquiredPanel').classList.remove('asset-view');
+        }
 
         // ── OPTION A: satellite-streets hybrid gives satellite imagery + road labels ──
         const map = new mapboxgl.Map({
@@ -578,7 +780,17 @@
             preserveDrawingBuffer: true
         });
 
-        map.on('load', () => { map.resize(); });
+        map.on('load', async () => {
+            map.resize();
+            // Geocode all assets first, then update marker positions
+            await geocodeAllAssets();
+            // Update any already-placed markers with fresh coords
+            Object.keys(propertyData).forEach(key => {
+                if (propertyData[key]._marker) {
+                    propertyData[key]._marker.setLngLat(propertyData[key].coords);
+                }
+            });
+        });
         window.addEventListener('resize', () => { map.resize(); });
 
         const m1GatewayElements = [];
@@ -665,7 +877,8 @@
                 e.stopPropagation(); 
                 openProperty(key);
             });
-            new mapboxgl.Marker({ element: el }).setLngLat(data.coords).addTo(map);
+            const mbMarker = new mapboxgl.Marker({ element: el }).setLngLat(data.coords).addTo(map);
+            data._marker = mbMarker;
             propertyMarkerElements.push(el); 
 
             listHTML += `
@@ -736,6 +949,7 @@
                 document.getElementById('assetCard').style.top  = '-9999px';
                 document.getElementById('assetCardPhoto').src = '';
                 clearInfraDist();
+                hideLocationPanel();
                 document.querySelectorAll('.acquired-item').forEach(el => el.classList.remove('active'));
                 propertyMarkerElements.forEach(el => {
                     el.querySelectorAll('.prop-circle').forEach(n => { n.style.opacity = '1'; });
@@ -1271,8 +1485,10 @@
             setViewLevel('asset');
             document.querySelectorAll('.prop-circle, .prop-label').forEach(el => { el.style.opacity = '0'; });
 
-            document.querySelectorAll('.acquired-item').forEach(el => el.classList.remove('active'));
             const idx = assetKeys.indexOf(propertyKey);
+            showLocationPanel(propertyKey, idx + 1);
+
+            document.querySelectorAll('.acquired-item').forEach(el => el.classList.remove('active'));
             const items = document.querySelectorAll('.acquired-item');
             if (items[idx]) items[idx].classList.add('active');
         };
