@@ -788,7 +788,7 @@
                     'line-color': '#8B1A1A',  // deep red
                     'line-opacity': 0,
                     'line-opacity-transition': { duration: 2500 },
-                    'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.5, 13, 4.5]
+                    'line-width': ['interpolate', ['linear'], ['zoom'], 9, 4, 13, 10]
                 }
             });
             
@@ -1006,7 +1006,7 @@
 
             setTimeout(() => {
                 try {
-                    map.setPaintProperty('highlight-highways', 'line-opacity', 0.55);
+                    map.setPaintProperty('highlight-highways', 'line-opacity', 1.0);
                     map.setPaintProperty('highway-labels', 'text-opacity', 1);
                     map.setPaintProperty('highway-labels', 'text-halo-opacity', 1);
                 } catch(e) {}
@@ -1303,7 +1303,7 @@
             map.setStyle(toSatellite ? SATELLITE_STYLE : DARK_STYLE);
             map.once('style.load', () => {
                 const active       = (currentAppView === 'sydney');
-                const lineOpacity  = active ? 0.55 : 0;
+                const lineOpacity  = active ? 1.0 : 0;
                 const labelOpacity = active ? 1    : 0;
 
                 // Repaint native motorway layers
@@ -1330,7 +1330,7 @@
                         'line-color': '#8B1A1A',
                         'line-opacity': lineOpacity,
                         'line-opacity-transition': { duration: 2500 },
-                        'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.5, 13, 4.5]
+                        'line-width': ['interpolate', ['linear'], ['zoom'], 9, 4, 13, 10]
                     }
                 });
 
