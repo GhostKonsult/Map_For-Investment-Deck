@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Capital - Interactive Portfolio</title>
+    
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js'></script>
+    
+    <style>
+        /* --- SAAS DESIGN SYSTEM VARIABLES --- */
+        :root {
+            --bg-panel: rgba(10, 10, 10, 0.85);
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --border-light: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --accent: #ff722f;
+            --accent-dark: #d95300; 
+            --infra-bg: #002D62; 
+            --accent-glow: rgba(255, 114, 47, 0.15);
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        #map {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+        
+        .glass {
+            background: var(--bg-panel);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+        }
+
+        .top-logo { position: absolute; top: 32px; left: 32px; width: 130px; z-index: 2; pointer-events: none; }
+
+        /* --- CINEMATIC TITLE --- */
+        .cinematic-title-container {
+            position: fixed; top: 45%; right: 80px; transform: translateY(-50%);
+            z-index: 50; text-align: right; pointer-events: none;
+            opacity: 0; transition: opacity 1.5s ease-in-out;
+        }
+        .cinematic-title-container.visible { opacity: 1; }
+        .cinematic-main { font-size: 56px; font-weight: 300; letter-spacing: 12px; color: #fff; margin: 0; text-shadow: 0 4px 30px rgba(0,0,0,0.9); }
+        .cinematic-sub { font-size: 16px; font-weight: 700; letter-spacing: 6px; color: var(--accent); margin-top: 12px; text-transform: uppercase; text-shadow: 0 2px 15px rgba(0,0,0,0.9); }
+
+        /* --- RESPONSIVE SCALING --- */
+        :root {
+            --scale: 1;
+            --panel-width: 280px;
+            --panel-padding: 24px;
+            --panel-logo-w: 160px;
+            --prop-pin-size: 76px;
+            --prop-pin-font: 28px;
+            --infra-icon-size: 68px;
+            --cbd-icon-size: 68px;
+            --asset-card-width: 320px;
+        }
+
+        @media (max-width: 1599px) {
+            :root {
+                --panel-width: 260px;
+                --panel-padding: 20px;
+                --panel-logo-w: 140px;
+                --prop-pin-size: 56px;
+                --prop-pin-font: 21px;
+                --infra-icon-size: 56px;
+                --cbd-icon-size: 56px;
+                --asset-card-width: 290px;
+            }
+        }
+
+        @media (max-width: 1279px) {
+            :root {
+                --panel-width: 230px;
+                --panel-padding: 16px;
+                --panel-logo-w: 120px;
+                --prop-pin-size: 42px;
+                --prop-pin-font: 15px;
+                --infra-icon-size: 48px;
+                --cbd-icon-size: 48px;
+                --asset-card-width: 260px;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            :root {
+                --panel-width: 200px;
+                --panel-padding: 14px;
+                --panel-logo-w: 100px;
+                --prop-pin-size: 34px;
+                --prop-pin-font: 13px;
+                --infra-icon-size: 40px;
+                --cbd-icon-size: 40px;
+                --asset-card-width: 220px;
+            }
+        }
+
+        .acquired-panel {
+            position: fixed;
+            top: 50%; left: 24px;
+            transform: translate(-120%, -50%);
+            width: var(--panel-width); z-index: 100; border-radius: 16px;
+            padding: var(--panel-padding); box-sizing: border-box;
+            opacity: 0; pointer-events: none; overflow-y: auto;
+            max-height: calc(100vh - 48px);
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+        }
+        .acquired-panel::-webkit-scrollbar { width: 3px; }
+        .acquired-panel::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 10px; }
+        .acquired-panel.visible {
+            transform: translate(0, -50%);
+            opacity: 1; pointer-events: auto;
+        }
+        
+        .panel-logo { 
+            width: 100%; 
+            max-width: 280px;
+            display: block; 
+            margin: 8px auto 24px auto;
+            opacity: 0.95;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .acquired-title {
+            color: var(--text-muted); font-size: 9px; font-weight: 700; 
+            margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px;
+            padding-bottom: 10px;
+        }
+        .acquired-list { display: flex; flex-direction: column; gap: 6px; }
+        
+        .acquired-item {
+            display: flex; align-items: center; padding: 10px 12px; border-radius: 0;
+            background: var(--bg-card); border: 1px solid transparent;
+            border-left: 2px solid transparent;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .acquired-item:hover { background: var(--bg-card-hover); border-color: transparent; border-left-color: var(--border-focus); transform: translateX(3px); }
+        .acquired-item.active { background: rgba(255,117,31,0.08); border-color: transparent; border-left-color: var(--accent); }
+        .acquired-item.active .acquired-num { background: var(--accent); color: #fff; border-color: var(--accent); }
+        
+        .acquired-num {
+            width: 24px; height: 24px;
+            background: #000; color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 0;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+            margin-right: 12px; flex-shrink: 0;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .acquired-item:hover .acquired-num { background: var(--accent); color: #fff; border-color: var(--accent); }
+        
+        .acquired-details { display: flex; flex-direction: column; }
+        .acquired-name { color: var(--text-main); font-size: 12px; font-weight: 600; margin-bottom: 2px; letter-spacing: 0.1px; }
+        .acquired-sub { color: var(--text-muted); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+
+        /* --- ASSET CARD POPUP — floats near property pin on map --- */
+        .asset-card {
+            position: fixed;
+            left: -9999px; top: -9999px;
+            z-index: 200; width: var(--asset-card-width); border-radius: 16px;
+            overflow: hidden; 
+            transition: opacity 0.8s ease;
+            opacity: 0; pointer-events: none;
+        }
+        .asset-card.visible { opacity: 1; pointer-events: auto; }
+        .asset-card-photo { width: 100%; height: 180px; object-fit: cover; display: block; transition: opacity 0s; opacity: 0; }
+        .asset-card-photo.loaded { opacity: 1; }
+        .asset-card-body { padding: 16px 20px; background: var(--bg-panel); backdrop-filter: blur(24px); border-top: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
+        .asset-card-text { display: flex; flex-direction: column; }
+        .asset-card-logo { width: clamp(60px, 8vw, 100px); display: block; opacity: 0.9; flex-shrink: 0; }
+        .asset-card-name { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+        .asset-card-sub { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+
+        /* --- RIGHT INSPECTOR PANEL --- */
+        .cgi-panel {
+            position: fixed; top: 16px; right: 16px; bottom: 16px; width: 400px;
+            z-index: 100; border-radius: 20px;
+            transform: translateX(120%); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; padding: 28px; box-sizing: border-box; overflow-y: auto;
+            opacity: 0; pointer-events: none;
+        }
+        .cgi-panel::-webkit-scrollbar { width: 4px; }
+        .cgi-panel::-webkit-scrollbar-thumb { background: var(--border-focus); border-radius: 10px; }
+        .cgi-panel.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+
+        .panel-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .header-text-group { flex: 1; }
+        .cgi-header { font-size: 22px; font-weight: 400; margin: 0 0 4px 0; letter-spacing: -0.5px; }
+        .cgi-sub { color: var(--text-muted); font-size: 11px; margin: 0; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+        
+        .close-panel {
+            background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-muted);
+            width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 18px; cursor: pointer; transition: all 0.2s;
+        }
+        .close-panel:hover { background: var(--border-light); color: var(--text-main); }
+
+        .main-cgi-view { width: 100%; height: 200px; border-radius: 12px; background-color: #000; margin-bottom: 12px; object-fit: cover; border: 1px solid var(--border-light); display: block; }
+        
+        .cgi-thumbnails { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+        .cgi-thumbnails::-webkit-scrollbar { display: none; }
+        .thumb { width: 60px; height: 44px; border-radius: 6px; object-fit: cover; cursor: pointer; border: 1px solid transparent; opacity: 0.4; transition: all 0.2s ease; flex-shrink: 0; }
+        .thumb.active { border-color: var(--accent); opacity: 1; }
+        .thumb:hover { opacity: 1; }
+
+        .cgi-desc { color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-top: 20px; }
+        
+        .cgi-stats { display: flex; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-light); }
+        .stat { flex: 1; background: var(--bg-card); border: 1px solid var(--border-light); padding: 12px; border-radius: 10px; }
+        .stat-val { font-size: 15px; font-weight: 600; margin-top: 4px; color: var(--text-main);}
+        .stat-lbl { color: var(--text-muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;}
+
+        /* --- MARKER FADES --- */
+        .marker-anchor {
+            width: 0; height: 0; position: absolute; z-index: 5;
+            pointer-events: none;
+        }
+        .marker-anchor.visible { pointer-events: auto; }
+        .gateway-hud, .poi-circle, .prop-circle, .marker-popup, .marker-anchor img { opacity: 0; }
+
+        /* --- DYNAMIC HUD GATEWAYS --- */
+        .gateway-hud {
+            position: absolute; top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            display: flex; align-items: center; 
+            background: linear-gradient(90deg, rgba(10,10,10,0.95) 0%, rgba(20,20,20,0.85) 100%);
+            border: 1px solid var(--border-focus); border-left: 3px solid var(--accent);
+            border-radius: 4px; padding: 6px 16px 6px 12px;
+            color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; gap: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 114, 47, 0.2);
+            white-space: nowrap; backdrop-filter: blur(8px); cursor: default;
+        }
+        .gateway-icon-container {
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(255, 114, 47, 0.1); border-radius: 50%; width: 32px; height: 32px;
+        }
+        .gateway-icon { fill: var(--accent); width: 18px; height: 18px; }
+        .gateway-info { display: flex; flex-direction: column; justify-content: center; text-align: left; }
+        .gw-dest { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #fff; text-transform: uppercase; margin-bottom: 2px;}
+        .gw-metrics { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; color: var(--accent); }
+        
+        .chevron-flow { display: flex; flex-direction: column; gap: -2px; margin-left: 4px; }
+        .chevron-flow span {
+            display: block; width: 6px; height: 6px;
+            border-top: 2px solid var(--text-muted); border-right: 2px solid var(--text-muted);
+            animation: chevronPulse 1.5s infinite; opacity: 0;
+        }
+        .chevron-flow.up span { transform: rotate(-45deg); margin-top: -3px; }
+        .chevron-flow.down span { transform: rotate(135deg); margin-bottom: -3px; }
+        .chevron-flow span:nth-child(1) { animation-delay: 0s; }
+        .chevron-flow span:nth-child(2) { animation-delay: 0.15s; }
+        .chevron-flow span:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes chevronPulse {
+            0% { opacity: 0; transform: scale(0.8) rotate(var(--rot)); }
+            50% { opacity: 1; border-color: var(--accent); transform: scale(1.1) rotate(var(--rot)); }
+            100% { opacity: 0; transform: scale(0.8) rotate(var(--rot)); }
+        }
+
+        /* --- INFRASTRUCTURE & ASSET PINS --- */
+        .poi-circle {
+            position: absolute; top: 0; left: 0; transform: translate(-50%, -50%); 
+            width: 48px; height: 48px; 
+            background-color: var(--infra-bg); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        }
+        .poi-circle svg { width: 24px; height: 24px; fill: var(--text-main); }
+        
+        .poi-circle.cbd {
+            width: 64px; height: 64px; background-color: #000000; border: 2px solid #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); animation: slowPulseBlack 3s infinite; z-index: 10;
+        }
+        .poi-circle.cbd svg { fill: #ffffff; width: 32px; height: 32px; }
+        
+        @keyframes slowPulseBlack {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5); }
+            50% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        .prop-circle {
+            position: absolute; top: 0; left: 0; transform: translate(-50%, -50%);
+            width: var(--prop-pin-size); height: var(--prop-pin-size); background-color: #ff751f; color: #ffffff;
+            border: 1px solid #ffffff; border-radius: 0; display: flex; justify-content: center; align-items: center;
+            font-size: var(--prop-pin-font); font-weight: 800; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .marker-anchor:hover .prop-circle { 
+            transform: translate(-50%, -50%) scale(1.1); background: var(--accent); color: #fff; border-color: var(--accent);
+            box-shadow: 0 6px 20px var(--accent-glow); z-index: 20;
+        }
+
+        .prop-label {
+            position: absolute; top: 50%; left: 34px; transform: translateY(-50%);
+            background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; padding: 4px 10px; border-radius: 6px;
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+
+        .marker-popup {
+            position: absolute; top: 50%; left: 40px; transform: translateY(-50%);
+            background: rgba(0,0,0,0.88); border: 1px solid rgba(255,255,255,0.25);
+            color: #fff; padding: 5px 12px; border-radius: 4px; font-size: 11px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+            white-space: nowrap; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        }
+        .poi-circle.cbd ~ .marker-popup {
+            left: 40px; top: 50%; bottom: auto; transform: translateY(-50%);
+            background: rgba(0,0,0,0.92); border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* --- NATIONAL MACRO CITIES --- */
+        .macro-city-wrapper { display: flex; flex-direction: column; align-items: center; opacity: 1; transition: opacity 1.5s ease; pointer-events: none; }
+        .macro-city-wrapper.fade-out { opacity: 0; }
+        
+        .macro-city-dot { width: 18px; height: 18px; background-color: var(--accent); border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 15px var(--accent); }
+        .macro-city-label { color: #fff; font-size: 13px; font-weight: 700; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
+
+        /* --- INFRA LIST --- */
+        .infra-list { display: flex; flex-direction: column; gap: 4px; }
+        .infra-item {
+            display: flex; align-items: center; padding: 8px 12px; border-radius: 0;
+            background: var(--bg-card); border: 1px solid transparent;
+            border-left: 2px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+        .infra-item.has-dist { border-left-color: rgba(255,114,47,0.4); }
+        .infra-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin-right: 10px; opacity: 0.7; }
+        .infra-details { display: flex; flex-direction: column; flex: 1; }
+        .infra-name { color: var(--text-muted); font-size: 11px; font-weight: 600; margin-bottom: 1px; letter-spacing: 0.1px; }
+        .infra-sub { color: rgba(255,255,255,0.25); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .infra-dist {
+            display: flex; flex-direction: column; align-items: flex-end;
+            flex-shrink: 0; margin-left: 8px; min-width: 40px;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        .infra-dist.loaded { opacity: 1; }
+        .infra-dist-time { font-size: 11px; font-weight: 700; color: var(--accent); line-height: 1.2; white-space: nowrap; }
+        .infra-dist-km { font-size: 8px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+
+        /* --- BACK BUTTON --- */
+        .back-btn {
+            display: none; align-items: center; gap: 8px;
+            width: 100%; margin-top: 16px; padding: 9px 12px;
+            background: var(--bg-card); border: 1px solid var(--border-light);
+            border-radius: 0; color: var(--text-muted); font-size: 9px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+            cursor: pointer; transition: all 0.2s ease; box-sizing: border-box;
+        }
+        .back-btn:hover { background: var(--bg-card-hover); border-color: var(--border-focus); color: var(--text-main); }
+        .back-btn.visible { display: flex; }
+        .back-arrow { font-size: 12px; line-height: 1; }
+
+        /* ── OPTION A: SONAR PULSE OVERLAY ── */
+        #pulseContainer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 50; overflow: hidden;
+        }
+        .pulse-ring {
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0.2);
+            opacity: 0;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 12px rgba(255, 114, 47, 0.4);
+        }
+        @keyframes sonarExpand {
+            0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 0.85; }
+            100% { transform: translate(-50%,-50%) scale(4);   opacity: 0; }
+        }
+        @keyframes sonarExpandSlow {
+            0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 0.5; }
+            100% { transform: translate(-50%,-50%) scale(3.2); opacity: 0; }
+        }
+
+        /* Asset number dot at pulse centre */
+        #pulseCentreDot {
+            position: fixed;
+            z-index: 55;
+            pointer-events: none;
+            display: none;
+            transform: translate(-50%, -50%);
+            width: 36px; height: 36px;
+            border-radius: 0;
+            background: var(--accent);
+            border: 1px solid #fff;
+            box-shadow: 0 4px 16px rgba(255,114,47,0.5);
+            align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: #fff;
+        }
+        #pulseCentreDot.visible { display: flex; }
+
+        /* Hide Mapbox branding for presentation */
+        .mapboxgl-ctrl-bottom-left,
+        .mapboxgl-ctrl-bottom-right { display: none !important; }
+        .asset-location-hud, .alh-leader { display: none !important; }
+
+        /* ── TRUCK MARKERS ── */
+        .truck-marker {
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 1.2s ease;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.9));
+        }
+        .truck-marker.visible { opacity: 1; }
+        .truck-marker svg { width: 22px; height: 22px; }
+    </style>
+</head>
+<body>
+
+    <div class="cinematic-title-container" id="cinematicTitle">
+        <h1 class="cinematic-main">SYDNEY</h1>
+        <div class="cinematic-sub">Australia's Gateway City</div>
+    </div>
+
+    <div class="acquired-panel glass" id="acquiredPanel">
+        <img src="BoxCapitalLogo.png" alt="Box Capital" class="panel-logo">
+        <h3 class="acquired-title">Acquired Assets</h3>
+        <div class="acquired-list" id="acquiredList"></div>
+
+        <h3 class="acquired-title" style="margin-top:24px;">Key Logistics Infrastructure</h3>
+        <div class="infra-list">
+            <div class="infra-item" id="infra-airport-syd">
+                <img src="Airport_icon.png" class="infra-icon" alt="Airport">
+                <div class="infra-details">
+                    <div class="infra-name">Sydney International Airport</div>
+                    <div class="infra-sub">Kingsford Smith</div>
+                </div>
+                <div class="infra-dist" id="dist-airport-syd"></div>
+            </div>
+            <div class="infra-item" id="infra-airport-wsyd">
+                <img src="Airport_icon.png" class="infra-icon" alt="Airport">
+                <div class="infra-details">
+                    <div class="infra-name">Western Sydney Airport</div>
+                    <div class="infra-sub">Nancy-Bird Walton</div>
+                </div>
+                <div class="infra-dist" id="dist-airport-wsyd"></div>
+            </div>
+            <div class="infra-item" id="infra-port">
+                <img src="port_icon.png" class="infra-icon" alt="Port">
+                <div class="infra-details">
+                    <div class="infra-name">Port Botany</div>
+                    <div class="infra-sub">Container Terminal</div>
+                </div>
+                <div class="infra-dist" id="dist-port"></div>
+            </div>
+            <div class="infra-item" id="infra-moorebank">
+                <img src="train_icon.png" class="infra-icon" alt="Train">
+                <div class="infra-details">
+                    <div class="infra-name">Moorebank Terminal</div>
+                    <div class="infra-sub">Intermodal Freight</div>
+                </div>
+                <div class="infra-dist" id="dist-moorebank"></div>
+            </div>
+        </div>
+
+        <button class="back-btn" id="backBtn">
+            <span class="back-arrow">←</span>
+            <span id="backLabel">Back to Sydney</span>
+        </button>
+    </div>
+
+    <div class="cgi-panel glass" id="cgiPanel">
+        <div class="panel-header-row">
+            <div class="header-text-group">
+                <h2 class="cgi-header" id="cgiTitle">Property Name</h2>
+                <p class="cgi-sub" id="cgiSub">Architectural Vision</p>
+            </div>
+            <button class="close-panel" id="closePanelBtn">&times;</button>
+        </div>
+        <img src="" class="main-cgi-view" id="mainCgiImage" alt="CGI View">
+        <div class="cgi-thumbnails" id="cgiThumbnails"></div>
+        <p class="cgi-desc" id="cgiDesc">Description</p>
+        <div class="cgi-stats">
+            <div class="stat"><div class="stat-lbl">Zoning</div><div class="stat-val" id="cgiZone">IN1</div></div>
+            <div class="stat"><div class="stat-lbl">Target Yield</div><div class="stat-val" id="cgiYield">6.5%</div></div>
+            <div class="stat"><div class="stat-lbl">Status</div><div class="stat-val" style="color:var(--accent);">Design</div></div>
+        </div>
+    </div>
+
+    <!-- Asset Card Popup -->
+    <div class="asset-card glass" id="assetCard">
+        <img src="" class="asset-card-photo" id="assetCardPhoto" alt="">
+        <div class="asset-card-body">
+            <div class="asset-card-text">
+                <div class="asset-card-name" id="assetCardName"></div>
+                <div class="asset-card-sub" id="assetCardSub"></div>
+            </div>
+            <img src="BoxCapitalLogo.png" class="asset-card-logo" alt="Box Capital">
+        </div>
+    </div>
+
+    <!-- OPTION A: Sonar pulse container -->
+    <div id="pulseContainer"></div>
+    <!-- Asset number dot at pulse centre -->
+    <div id="pulseCentreDot"></div>
+
+    <!-- OPTION A: Asset location HUD (floating near pin) -->
+    <div class="asset-location-hud" id="assetLocationHud">
+        <div class="alh-inner">
+            <div class="alh-title" id="alhTitle">—</div>
+            <div class="alh-sub" id="alhSub">—</div>
+            <div class="alh-stats">
+                <div class="alh-stat">
+                    <div class="alh-val" id="alhZone">—</div>
+                    <div class="alh-lbl">Zone</div>
+                </div>
+                <div class="alh-stat">
+                    <div class="alh-val" id="alhYield">—</div>
+                    <div class="alh-lbl">Yield</div>
+                </div>
+                <div class="alh-stat">
+                    <div class="alh-val" id="alhStatus" style="color:var(--accent);">—</div>
+                    <div class="alh-lbl">Status</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- SVG leader line -->
+    <svg class="alh-leader" id="alhLeader" style="width:0;height:0;top:0;left:0;" xmlns="http://www.w3.org/2000/svg">
+        <line id="alhLine" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,114,47,0.5)" stroke-width="1" stroke-dasharray="4,3"/>
+    </svg>
+
+    <div id="map"></div>
+
+    <script>
+        // ── OPTION A: use satellite style as base ──
+        mapboxgl.accessToken = 'pk.eyJ1Ijoid2Fsa3RoaXNyYXkiLCJhIjoiY21udGhrYWVuMG10dTJ3b2djZmtvZDhrOSJ9.7RMe9fjz3dwadhKWpxqtpg';
+
+        let currentAppView = 'macro'; 
+
+        const propertyData = {
+            "underwood": { sub: "Homebush", coords: [151.0764, -33.8672], zoom: 17, bearing: 15, pitch: 65, title: "7-9 Underwood St", zone: "IN1", yield: "5.8%", status: "leased", photo: "", desc: "High-clearance logistics facility modernization featuring automated docking integration.", cgis: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1430285561322-780c60ea3f5d?auto=format&fit=crop&w=1600&q=80"] },
+            "parramatta": { sub: "Lidcombe", coords: [151.0540, -33.8664], zoom: 17, bearing: 90, pitch: 65, title: "11 Parramatta Rd", zone: "IN2", yield: "6.0%", status: "available", photo: "", desc: "Premium industrial facility with excellent arterial road access and last-mile distribution potential.", cgis: ["https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80"] },
+            "miller": { sub: "Villawood", coords: [150.9878, -33.8760], zoom: 17, bearing: -45, pitch: 65, title: "152 Miller Rd", zone: "IN1", yield: "6.2%", status: "available", photo: "", desc: "Large-scale industrial facility focused on maximizing hardstand and heavy vehicle articulation.", cgis: ["https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1504307651254-35680f356f12?auto=format&fit=crop&w=1600&q=80"] },
+            "victoria": { sub: "Wetherill Park", coords: [150.9025, -33.8385], zoom: 17, bearing: 0, pitch: 65, title: "511 Victoria Rd", zone: "IN1", yield: "6.4%", status: "available", photo: "", desc: "Strategic Western Sydney logistics node with M7 motorway access and large-format warehousing.", cgis: ["https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80"] },
+            "walters": { sub: "Arndell Park", coords: [150.8950, -33.7918], zoom: 17, bearing: 45, pitch: 65, title: "216 Walters Rd", zone: "IN1", yield: "6.1%", status: "available", photo: "", desc: "Modern industrial campus in the heart of the Arndell Park precinct with strong owner-occupier appeal.", cgis: ["https://images.unsplash.com/photo-1545324418-auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1600&q=80"] },
+            "belmore": { sub: "Riverwood", coords: [151.0580, -33.9480], zoom: 17, bearing: -30, pitch: 65, title: "70 Belmore Rd", zone: "IN2", yield: "6.3%", status: "available", photo: "", desc: "Inner-south Sydney industrial asset with strong transport links and urban infill logistics opportunity.", cgis: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1430285561322-780c60ea3f5d?auto=format&fit=crop&w=1600&q=80"] },
+            "bronti": { sub: "Mascot", coords: [151.1880, -33.9285], zoom: 17, bearing: 20, pitch: 65, title: "2 Bronti St", zone: "E4", yield: "6.5%", status: "under-offer", photo: "", desc: "Airport-adjacent last-mile distribution asset offering exceptional time-critical freight connectivity.", cgis: ["https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80"] },
+            "welder": { sub: "Seven Hills", coords: [150.9350, -33.7720], zoom: 17, bearing: -15, pitch: 65, title: "1-3 Welder St", zone: "IN1", yield: "5.9%", status: "available", photo: "", desc: "North-west Sydney industrial holding with excellent M2/M7 interchange access for metro distribution.", cgis: ["https://images.unsplash.com/photo-1504307651254-35680f356f12?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1600&q=80"] }
+        };
+
+        // ── OPTION A: satellite-streets hybrid gives satellite imagery + road labels ──
+        const map = new mapboxgl.Map({
+            container: 'map', 
+            style: 'mapbox://styles/mapbox/dark-v11',
+            center: [133.7751, -25.2744], 
+            zoom: 3.5, 
+            pitch: 0, 
+            bearing: 0,
+            // TILE RELOAD FIX: preserve drawing buffer so screen recording doesn't get black frames
+            preserveDrawingBuffer: true
+        });
+
+        map.on('load', () => { map.resize(); });
+        window.addEventListener('resize', () => { map.resize(); });
+
+        const m1GatewayElements = [];
+        const cbdMarkerElements = [];
+        const infraMarkerElements = [];
+        const propertyMarkerElements = [];
+
+        const trainIconHTML = `<img src="train_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Train">`;
+        const planeSVG = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M2.5,19H21.5V21H2.5V19M22.07,9.64C21.86,8.84 21.03,8.36 20.23,8.58L14.92,10L8,3.57H5.73L8.4,11.71L3.46,13L1.6,10.15H0.46L1.87,14.69L20.23,19.5C21.03,19.71 21.86,19.23 22.07,18.43L22.07,9.64Z"/></svg>';
+        const portIconHTML = `<img src="port_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Port">`;
+        const parramattaCbdIconHTML = `<img src="parramatta_cbd_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Parramatta CBD">`;
+        const sydneyCbdIconHTML = `<img src="sydney_cbd_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Sydney CBD">`;
+        const truckSVG = '<svg class="gateway-icon" viewBox="0 0 24 24"><path d="M20,8H17V4H3C1.89,4 1,4.89 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8M6,18.5C5.17,18.5 4.5,17.83 4.5,17C4.5,16.17 5.17,15.5 6,15.5C6.83,15.5 7.5,16.17 7.5,17C7.5,17.83 6.83,18.5 6,18.5M18,18.5C17.17,18.5 16.5,17.83 16.5,17C16.5,16.17 17.17,15.5 18,15.5C18.83,15.5 19.5,16.17 19.5,17C19.5,17.83 18.83,18.5 18,18.5M17,12V9.5H19.5L21.47,12H17Z"/></svg>';
+
+        // 1. M1 TRUCKS HUD GATEWAYS (unchanged)
+        const gatewayData = [
+            { 
+                coords: [151.13079288647918, -33.7295188165033], 
+                html: `<div class="gateway-hud">
+                            <div class="gateway-icon-container">${truckSVG}</div>
+                            <div class="gateway-info">
+                                <span class="gw-dest">M1 to Brisbane</span>
+                                <span class="gw-metrics">920 km // 10 hrs</span>
+                            </div>
+                            <div class="chevron-flow up" style="--rot:-45deg;"><span></span><span></span><span></span></div>
+                       </div>` 
+            },
+            { 
+                coords: [150.9200, -33.9800], 
+                html: `<div class="gateway-hud">
+                            <div class="gateway-icon-container">${truckSVG}</div>
+                            <div class="gateway-info">
+                                <span class="gw-dest">M1 to Melbourne</span>
+                                <span class="gw-metrics">870 km // 9 hrs</span>
+                            </div>
+                            <div class="chevron-flow down" style="--rot:135deg;"><span></span><span></span><span></span></div>
+                       </div>` 
+            }
+        ];
+        gatewayData.forEach(gw => {
+            const el = document.createElement('div'); el.className = 'marker-anchor'; 
+            el.innerHTML = gw.html;
+            new mapboxgl.Marker({ element: el }).setLngLat(gw.coords).addTo(map);
+            m1GatewayElements.push(el);
+        });
+
+        // 2. INFRASTRUCTURE & CBD MARKERS (unchanged)
+        const airportIconHTML = `<img src="Airport_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Airport">`;
+        const poiData = [
+            { lng: 150.9160, lat: -33.9510, icon: trainIconHTML, isCbd: false, isAirport: true }, 
+            { lng: 151.1753, lat: -33.9399, icon: airportIconHTML, isCbd: false, isAirport: true }, 
+            { lng: 150.8700, lat: -33.9150, icon: airportIconHTML, isCbd: false, isAirport: true }, 
+            { lng: 151.2166, lat: -33.9666, icon: portIconHTML, isCbd: false, isAirport: true }, 
+            { sub: "Parramatta CBD", lng: 151.0011, lat: -33.8150, icon: parramattaCbdIconHTML, isCbd: true, isAirport: true }, 
+            { sub: "Sydney CBD", lng: 151.2093, lat: -33.8688, icon: sydneyCbdIconHTML, isCbd: true, isAirport: true } 
+        ];
+        poiData.forEach(poi => {
+            const el = document.createElement('div'); el.className = 'marker-anchor'; 
+            let extraClass = poi.isCbd ? ' cbd' : '';
+            let htmlString = poi.isAirport 
+                ? poi.icon
+                : `<div class="poi-circle${extraClass}">${poi.icon}</div>`;
+            if(poi.isCbd) { htmlString = `<div style="position:absolute;top:0;left:0;">${htmlString}<div class="marker-popup">${poi.sub}</div></div>`; }
+            el.innerHTML = htmlString;
+            new mapboxgl.Marker({ element: el }).setLngLat([poi.lng, poi.lat]).addTo(map);
+            if (poi.isCbd) { cbdMarkerElements.push(el); } else { infraMarkerElements.push(el); }
+        });
+
+        // 3. PROPERTY MARKERS & DASHBOARD LIST (unchanged)
+        const acquiredListEl = document.getElementById('acquiredList');
+        let listHTML = '';
+
+        Object.keys(propertyData).forEach((key, index) => {
+            const data = propertyData[key];
+            const el = document.createElement('div'); el.className = 'marker-anchor'; 
+            const propNumber = index + 1; 
+            
+            el.innerHTML = `
+                <div class="prop-circle">${propNumber}</div>
+                <div class="prop-label">${data.title}</div>
+            `;
+            
+            el.addEventListener('click', (e) => { 
+                e.stopPropagation(); 
+                openProperty(key);
+            });
+            new mapboxgl.Marker({ element: el }).setLngLat(data.coords).addTo(map);
+            propertyMarkerElements.push(el); 
+
+            listHTML += `
+                <div class="acquired-item" onclick="openProperty('${key}')">
+                    <div class="acquired-num">${propNumber}</div>
+                    <div class="acquired-details">
+                        <div class="acquired-name">${data.title}</div>
+                        <div class="acquired-sub">${data.sub}</div>
+                    </div>
+                </div>
+            `;
+        });
+        acquiredListEl.innerHTML = listHTML;
+
+        // 4. MACRO NATIONAL CITY MARKERS (unchanged)
+        const macroCities = [
+            { name: "Brisbane", coords: [153.0251, -27.4698] },
+            { name: "Sydney", coords: [151.2093, -33.8688] },
+            { name: "Melbourne", coords: [144.9631, -37.8136] },
+            { name: "Adelaide", coords: [138.6007, -34.9285] },
+            { name: "Perth", coords: [115.8605, -31.9505] }
+        ];
+        const macroMarkerElements = [];
+        macroCities.forEach(city => {
+            const el = document.createElement('div');
+            el.className = 'macro-city-wrapper';
+            el.innerHTML = `<div class="macro-city-dot"></div><div class="macro-city-label">${city.name}</div>`;
+            new mapboxgl.Marker({ element: el }).setLngLat(city.coords).addTo(map);
+            macroMarkerElements.push(el);
+        });
+
+        // BACK BUTTON (unchanged logic)
+        let viewLevel = 'sydney';
+        const backBtn = document.getElementById('backBtn');
+        const backLabel = document.getElementById('backLabel');
+
+        function setViewLevel(level) {
+            viewLevel = level;
+            if (level === 'asset') {
+                backLabel.textContent = 'Back to Sydney';
+                backBtn.classList.add('visible');
+            } else if (level === 'sydney') {
+                backLabel.textContent = 'Back to Australia';
+                backBtn.classList.add('visible');
+            } else {
+                backBtn.classList.remove('visible');
+            }
+        }
+
+        function fadeOutGroup(elements) {
+            elements.forEach(el => {
+                const inner = el.querySelectorAll('.gateway-hud, .poi-circle, .prop-circle, .marker-popup, img');
+                inner.forEach(node => { node.style.opacity = '0'; });
+                el.classList.remove('visible');
+            });
+        }
+
+        backBtn.addEventListener('click', () => {
+            stopRotation();
+            stopSonarPulse();
+            stopCardTracking();
+            if (viewLevel === 'asset') {
+                map.flyTo({ center: [151.03281259541, -33.856373488697834], zoom: 11.220382571983798, pitch: 0, bearing: 0, duration: 3500, essential: true });
+                activeAssetIndex = -1;
+                activePropertyKey = null;
+                document.getElementById('assetCard').classList.remove('visible');
+                document.getElementById('assetCard').style.left = '-9999px';
+                document.getElementById('assetCard').style.top  = '-9999px';
+                document.getElementById('assetCardPhoto').src = '';
+                clearInfraDist();
+                document.querySelectorAll('.acquired-item').forEach(el => el.classList.remove('active'));
+                propertyMarkerElements.forEach(el => {
+                    el.querySelectorAll('.prop-circle').forEach(n => { n.style.opacity = '1'; });
+                });
+                setViewLevel('sydney');
+                map.once('moveend', () => { startTrucks(); });
+            } else if (viewLevel === 'sydney') {
+                location.reload();
+            }
+        });
+
+        // MAPBOX LAYER STYLING
+        map.on('style.load', () => {
+            const styleLayers = map.getStyle().layers;
+
+            for (const layer of styleLayers) {
+                // Hide all place/country/region labels
+                if (layer.type === 'symbol') {
+                    try { map.setLayoutProperty(layer.id, 'visibility', 'none'); } catch(e) {}
+                }
+
+                // ── OPTION 2: Repaint existing motorway layers natively ──
+                // Find any road layer that contains motorway/trunk roads and recolour them
+                if (layer.type === 'line' && layer['source-layer'] === 'road') {
+                    const id = layer.id;
+                    try {
+                        // Motorway case/casing layers — give a deep charcoal so they recede
+                        if (id.includes('motorway') || id.includes('trunk')) {
+                            if (id.includes('case') || id.includes('outline')) {
+                                map.setPaintProperty(id, 'line-color', '#0a0a0a');
+                                map.setPaintProperty(id, 'line-opacity', 0.9);
+                            } else {
+                                // Main motorway fill — warm near-black with slight warmth
+                                map.setPaintProperty(id, 'line-color', '#1c1410');
+                                map.setPaintProperty(id, 'line-opacity', 1.0);
+                            }
+                        }
+                    } catch(e) {}
+                }
+            }
+
+            // Custom highlight layer for the sequence fade-in — uses existing road source
+            // but just as a thin accent line, starts opacity 0
+            map.addLayer({
+                'id': 'highlight-highways', 'type': 'line',
+                'source': 'composite', 'source-layer': 'road',
+                'filter': ['==', ['get', 'class'], 'motorway'],
+                'layout': { 'line-cap': 'round', 'line-join': 'round' },
+                'paint': {
+                    'line-color': '#c8a882',  // warm parchment — sophisticated, not garish
+                    'line-opacity': 0,
+                    'line-opacity-transition': { duration: 2500 },
+                    'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 13, 1.5]
+                }
+            });
+            
+            const customHighwayLabels = {
+                'type': 'FeatureCollection',
+                'features': [
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [151.10, -33.78] }, 'properties': { 'label': 'M2' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [150.95, -33.82] }, 'properties': { 'label': 'M4' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [150.95, -33.95] }, 'properties': { 'label': 'M5' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [150.85, -33.85] }, 'properties': { 'label': 'M7' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [151.15, -33.92] }, 'properties': { 'label': 'M8' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [150.75, -33.88] }, 'properties': { 'label': 'M12' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [151.10, -33.72] }, 'properties': { 'label': 'NorthConnex' } }
+                ]
+            };
+
+            if (!map.getSource('custom-highway-labels')) {
+                map.addSource('custom-highway-labels', { 'type': 'geojson', 'data': customHighwayLabels });
+            }
+            
+            map.addLayer({
+                'id': 'highway-labels', 'type': 'symbol', 'source': 'custom-highway-labels',
+                'layout': { 
+                    'text-field': ['get', 'label'], 'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'], 
+                    'text-size': 15, 'text-anchor': 'center', 'visibility': 'visible',
+                    'text-allow-overlap': true, 'text-ignore-placement': true
+                },
+                'paint': { 
+                    'text-color': '#c8a882', 'text-halo-color': 'rgba(0,0,0,0.7)', 'text-halo-width': 1.5,
+                    'text-opacity': 0, 'text-opacity-transition': { duration: 2000 },
+                    'text-halo-opacity': 0, 'text-halo-opacity-transition': { duration: 2000 }
+                }
+            });
+
+            // ── OPTION A: NO 3D BUILDINGS — removed entirely ──
+            // GeoJSON source kept for any future use but no extrusion layers added
+            if (!map.getSource('custom-highlight')) {
+                map.addSource('custom-highlight', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: [] }
+                });
+            }
+        });
+
+        // Building toggle removed
+
+        // ── TRUCK ANIMATION SYSTEM ────────────────────────────
+        const truckSVGIcon = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#ff722f" d="M20,8H17V4H3C1.89,4 1,4.89 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8M6,18.5C5.17,18.5 4.5,17.83 4.5,17C4.5,16.17 5.17,15.5 6,15.5C6.83,15.5 7.5,16.17 7.5,17C7.5,17.83 6.83,18.5 6,18.5M18,18.5C17.17,18.5 16.5,17.83 16.5,17C16.5,16.17 17.17,15.5 18,15.5C18.83,15.5 19.5,16.17 19.5,17C19.5,17.83 18.83,18.5 18,18.5M17,12V9.5H19.5L21.47,12H17Z"/></svg>`;
+
+        const truckRouteDefs = [
+            { coords: [[150.900,-33.960],[150.892,-33.940],[150.889,-33.900],[150.887,-33.870],[150.884,-33.836],[150.883,-33.810],[150.882,-33.792],[150.881,-33.760],[150.882,-33.720]], speed: 90, offset: 0.0 },
+            { coords: [[150.882,-33.720],[150.881,-33.760],[150.882,-33.792],[150.883,-33.810],[150.884,-33.836],[150.887,-33.870],[150.889,-33.900],[150.892,-33.940],[150.900,-33.960]], speed: 85, offset: 0.55 },
+            { coords: [[151.149,-33.808],[151.100,-33.808],[151.060,-33.810],[151.020,-33.812],[150.980,-33.814],[150.940,-33.816],[150.881,-33.820]], speed: 95, offset: 0.25 },
+            { coords: [[150.881,-33.820],[150.940,-33.816],[150.980,-33.814],[151.020,-33.812],[151.060,-33.810],[151.100,-33.808],[151.149,-33.808]], speed: 100, offset: 0.7 },
+            { coords: [[150.900,-33.960],[150.940,-33.930],[150.980,-33.910],[151.020,-33.895],[151.039,-33.892],[151.080,-33.890],[151.120,-33.910],[151.175,-33.940]], speed: 88, offset: 0.4 },
+            { coords: [[151.175,-33.940],[151.120,-33.910],[151.080,-33.890],[151.039,-33.892],[151.020,-33.895],[150.980,-33.910],[150.940,-33.930],[150.900,-33.960]], speed: 82, offset: 0.85 }
+        ];
+
+        let truckState = null; // null until startTrucks() called
+        let truckRafId = null;
+
+        function startTrucks() {
+            // Tear down any existing trucks first
+            stopTrucks();
+
+            // Build turf lines
+            const lines = truckRouteDefs.map(r => {
+                const line = turf.lineString(r.coords);
+                const len  = turf.length(line, { units: 'kilometers' });
+                return { line, len };
+            });
+
+            // Progress: offset fraction * route length
+            const progress = truckRouteDefs.map((r, i) => r.offset * lines[i].len);
+
+            // Create markers at their correct starting positions
+            const markers = truckRouteDefs.map((r, i) => {
+                const startPt = turf.along(lines[i].line, progress[i], { units: 'kilometers' });
+                const el = document.createElement('div');
+                el.className = 'truck-marker visible';
+                el.innerHTML = truckSVGIcon;
+                const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+                    .setLngLat(startPt.geometry.coordinates)
+                    .addTo(map);
+                return { el, marker };
+            });
+
+            truckState = { lines, progress, markers };
+
+            // 600x speed multiplier so trucks are visibly moving at city zoom
+            const KM_PER_MS = 600 / 3600000;
+            let lastTs = null;
+
+            function tick(ts) {
+                if (!truckState) return;
+                const delta = lastTs === null ? 16 : Math.min(ts - lastTs, 100);
+                lastTs = ts;
+
+                truckRouteDefs.forEach((r, i) => {
+                    const { line, len } = truckState.lines[i];
+                    truckState.progress[i] = (truckState.progress[i] + r.speed * KM_PER_MS * delta) % len;
+                    const d = truckState.progress[i];
+
+                    const pt    = turf.along(line, d, { units: 'kilometers' });
+                    const ahead = turf.along(line, Math.min(d + 0.08, len - 0.001), { units: 'kilometers' });
+                    const bearing = turf.bearing(pt, ahead);
+
+                    truckState.markers[i].marker.setLngLat(pt.geometry.coordinates);
+                    truckState.markers[i].el.style.transform = `rotate(${bearing}deg)`;
+                });
+
+                truckRafId = requestAnimationFrame(tick);
+            }
+            truckRafId = requestAnimationFrame(tick);
+        }
+
+        function stopTrucks() {
+            if (truckRafId) { cancelAnimationFrame(truckRafId); truckRafId = null; }
+            if (truckState) {
+                truckState.markers.forEach(t => t.marker.remove());
+                truckState = null;
+            }
+        }
+        let pulseTimers = [];
+        let currentPulseCoords = null;
+        let pulseRafId = null;
+
+        function stopSonarPulse() {
+            pulseTimers.forEach(t => clearTimeout(t));
+            pulseTimers = [];
+            if (pulseRafId) { cancelAnimationFrame(pulseRafId); pulseRafId = null; }
+            document.getElementById('pulseContainer').innerHTML = '';
+            currentPulseCoords = null;
+            // Hide centre dot
+            const dot = document.getElementById('pulseCentreDot');
+            dot.classList.remove('visible');
+        }
+
+        function fireSinglePulse(x, y) {
+            const container = document.getElementById('pulseContainer');
+            const baseSize = 100;
+
+            // Outer ring
+            const r1 = document.createElement('div');
+            r1.className = 'pulse-ring';
+            r1.style.cssText = `left:${x}px; top:${y}px; width:${baseSize}px; height:${baseSize}px; animation: sonarExpand 2.6s cubic-bezier(0.2,0,0.6,1) forwards;`;
+            container.appendChild(r1);
+
+            // Inner ring — slightly delayed, slower
+            const r2 = document.createElement('div');
+            r2.className = 'pulse-ring';
+            r2.style.cssText = `left:${x}px; top:${y}px; width:${baseSize * 0.55}px; height:${baseSize * 0.55}px; animation: sonarExpandSlow 2.6s cubic-bezier(0.2,0,0.5,1) forwards; animation-delay: 0.35s; border-width: 1px; opacity:0;`;
+            container.appendChild(r2);
+
+            // Auto-remove
+            const t = setTimeout(() => { r1.remove(); r2.remove(); }, 3200);
+            pulseTimers.push(t);
+        }
+
+        function getScreenPos(coords) {
+            const p = map.project(coords);
+            return { x: p.x, y: p.y };
+        }
+
+        function startSonarLoop(coords, assetNumber) {
+            stopSonarPulse();
+            currentPulseCoords = coords;
+
+            // Show and label the centre dot
+            const dot = document.getElementById('pulseCentreDot');
+            dot.textContent = assetNumber || '';
+            dot.classList.add('visible');
+
+            function loop() {
+                if (!currentPulseCoords) return;
+                const pos = getScreenPos(currentPulseCoords);
+                fireSinglePulse(pos.x, pos.y);
+                const t = setTimeout(loop, 2800);
+                pulseTimers.push(t);
+            }
+            loop();
+
+            // Track dot position every frame as map rotates
+            function trackDot() {
+                if (!currentPulseCoords) return;
+                const pos = getScreenPos(currentPulseCoords);
+                dot.style.left = pos.x + 'px';
+                dot.style.top  = pos.y + 'px';
+                pulseRafId = requestAnimationFrame(trackDot);
+            }
+            trackDot();
+        }
+
+        // ── OPTION A: ASSET LOCATION HUD ──────────────────────
+        let hudRafId = null;
+
+        function showAssetHud(data) {
+            const hud = document.getElementById('assetLocationHud');
+            document.getElementById('alhTitle').textContent  = data.title;
+            document.getElementById('alhSub').textContent    = data.sub;
+            document.getElementById('alhZone').textContent   = data.zone;
+            document.getElementById('alhYield').textContent  = data.yield;
+            const statusMap = { available: 'Available', leased: 'Leased', 'under-offer': 'Under Offer' };
+            document.getElementById('alhStatus').textContent = statusMap[data.status] || data.status;
+            hud.classList.add('visible');
+
+            // Position HUD offset from pin on screen, update on every render frame
+            function updateHudPos() {
+                if (!currentPulseCoords) return;
+                const pos = getScreenPos(currentPulseCoords);
+                const hudW = hud.offsetWidth || 200;
+                const hudH = hud.offsetHeight || 80;
+
+                // Place HUD to the right of the pin, vertically centred
+                let hx = pos.x + 60;
+                let hy = pos.y - hudH / 2;
+
+                // Clamp to viewport
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                if (hx + hudW > vw - 20) hx = pos.x - hudW - 60;
+                if (hy < 10) hy = 10;
+                if (hy + hudH > vh - 10) hy = vh - hudH - 10;
+
+                hud.style.left = hx + 'px';
+                hud.style.top  = hy + 'px';
+
+                // SVG leader line: from right/left edge of hud to the pin
+                const svg  = document.getElementById('alhLeader');
+                const line = document.getElementById('alhLine');
+                const margin = 20;
+                svg.style.width  = vw + 'px';
+                svg.style.height = vh + 'px';
+
+                // Line from hud edge to pin
+                const lineX1 = hx < pos.x ? hx + hudW : hx;
+                const lineY1 = hy + hudH / 2;
+                line.setAttribute('x1', lineX1);
+                line.setAttribute('y1', lineY1);
+                line.setAttribute('x2', pos.x);
+                line.setAttribute('y2', pos.y);
+
+                hudRafId = requestAnimationFrame(updateHudPos);
+            }
+            if (hudRafId) cancelAnimationFrame(hudRafId);
+            // Slight delay so hud has rendered dimensions
+            setTimeout(updateHudPos, 80);
+        }
+
+        function hideAssetHud() {
+            document.getElementById('assetLocationHud').classList.remove('visible');
+            if (hudRafId) { cancelAnimationFrame(hudRafId); hudRafId = null; }
+            const svg = document.getElementById('alhLeader');
+            svg.style.width = '0'; svg.style.height = '0';
+        }
+
+        // ORIGINAL sequence code — unchanged
+        function fadeInGroup(elements, duration) {
+            const ms = duration || 1400;
+            const targets = [];
+            elements.forEach(el => {
+                el.classList.add('visible');
+                const inner = el.querySelectorAll('.gateway-hud, .poi-circle, .prop-circle, .marker-popup');
+                inner.forEach(node => { node.style.opacity = '0'; targets.push(node); });
+                el.querySelectorAll('img').forEach(img => { img.style.opacity = '0'; targets.push(img); });
+            });
+            const start = performance.now();
+            function tick(now) {
+                const p = Math.min((now - start) / ms, 1);
+                const e = p < 0.5 ? 2*p*p : -1+(4-2*p)*p;
+                targets.forEach(node => { node.style.opacity = String(e); });
+                if (p < 1) requestAnimationFrame(tick);
+                else targets.forEach(node => { node.style.opacity = '1'; });
+            }
+            requestAnimationFrame(tick);
+        }
+
+        function startSequence() {
+            if (currentAppView !== 'macro') return; 
+            currentAppView = 'sydney';
+            sequenceRunning = true;
+
+            macroMarkerElements.forEach(el => { el.classList.add('fade-out'); });
+
+            map.flyTo({ center: [151.03281259541, -33.856373488697834], zoom: 11.220382571983798, pitch: 0, bearing: 0, duration: 13000, essential: true });
+
+            setTimeout(() => { 
+                const title = document.getElementById('cinematicTitle');
+                if(title) title.classList.add('visible');
+            }, 4000);
+
+            setTimeout(() => {
+                try {
+                    map.setPaintProperty('highlight-highways', 'line-opacity', 0.55);
+                    map.setPaintProperty('highway-labels', 'text-opacity', 1);
+                    map.setPaintProperty('highway-labels', 'text-halo-opacity', 1);
+                } catch(e) {}
+            }, 6000);
+
+            setTimeout(() => {
+                const title = document.getElementById('cinematicTitle');
+                if(title) title.classList.remove('visible');
+            }, 10500);
+
+            setTimeout(() => { fadeInGroup(m1GatewayElements); }, 10800);
+            setTimeout(() => { fadeInGroup(cbdMarkerElements); }, 11400);
+            setTimeout(() => { fadeInGroup(infraMarkerElements); }, 12400);
+            setTimeout(() => { fadeInGroup(propertyMarkerElements); }, 13400);
+            
+            setTimeout(() => {
+                try {
+                    const panel = document.getElementById('acquiredPanel');
+                    if (panel) panel.classList.add('visible');
+                } catch(e) {}
+                document.getElementById('shortcutLegend') && document.getElementById('shortcutLegend').classList.add('visible');
+                setViewLevel('sydney');
+                startTrucks();
+            }, 14500);
+            setTimeout(() => { sequenceRunning = false; }, 16000);
+        }
+
+        let activeAssetIndex = -1;
+        const assetKeys = Object.keys(propertyData);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                startSequence();
+            }
+            if (e.code === 'ArrowDown' && (viewLevel === 'sydney' || viewLevel === 'asset')) {
+                e.preventDefault();
+                activeAssetIndex = (activeAssetIndex + 1) % assetKeys.length;
+                openProperty(assetKeys[activeAssetIndex]);
+            }
+            if (e.code === 'ArrowUp' && (viewLevel === 'sydney' || viewLevel === 'asset')) {
+                e.preventDefault();
+                activeAssetIndex = (activeAssetIndex - 1 + assetKeys.length) % assetKeys.length;
+                openProperty(assetKeys[activeAssetIndex]);
+            }
+            if (e.code === 'Backspace') {
+                e.preventDefault();
+                backBtn.click();
+            }
+            // Number keys 1–5 jump directly to asset, 0 goes back to Sydney
+            if ((viewLevel === 'sydney' || viewLevel === 'asset') && e.key >= '1' && e.key <= '5') {
+                const num = parseInt(e.key) - 1;
+                if (num < assetKeys.length) {
+                    activeAssetIndex = num;
+                    openProperty(assetKeys[num]);
+                }
+            }
+            if (e.key === '0' && viewLevel === 'asset') {
+                e.preventDefault();
+                backBtn.click();
+            }
+            // S = Satellite, D = Dark
+            if (e.key === 's' || e.key === 'S') { switchMapStyle(true); }
+            if (e.key === 'd' || e.key === 'D') { switchMapStyle(false); }
+        });
+
+        let rotationHandle = null;
+
+        function stopRotation() {
+            if (rotationHandle) {
+                cancelAnimationFrame(rotationHandle);
+                rotationHandle = null;
+            }
+        }
+
+        function startRotation(center) {
+            stopRotation();
+            const degreesPerMs = 0.008;
+            let lastTime = null;
+            function rotate(timestamp) {
+                if (lastTime !== null) {
+                    const delta = timestamp - lastTime;
+                    map.setBearing((map.getBearing() + degreesPerMs * delta) % 360);
+                }
+                lastTime = timestamp;
+                rotationHandle = requestAnimationFrame(rotate);
+            }
+            rotationHandle = requestAnimationFrame(rotate);
+        }
+
+        map.on('mousedown', stopRotation);
+        map.on('touchstart', stopRotation);
+
+        let sequenceRunning = false;
+
+        map.on('zoom', () => {
+            if (sequenceRunning) return;
+            const zoom = map.getZoom();
+            if (zoom < 10.33 && viewLevel === 'sydney') {
+                [...m1GatewayElements, ...cbdMarkerElements, ...infraMarkerElements, ...propertyMarkerElements].forEach(el => {
+                    el.querySelectorAll('.gateway-hud, .poi-circle, .prop-circle, .prop-label, img').forEach(n => { n.style.opacity = '0'; });
+                });
+            }
+            if (viewLevel === 'sydney') {
+                // prop-labels intentionally suppressed
+            }
+            if (viewLevel === 'asset') {
+                document.querySelectorAll('.prop-label, .prop-circle').forEach(el => { el.style.opacity = '0'; });
+            }
+        });
+
+        // ── ASSET CARD — track near property pin ──────────────
+        let cardRafId = null;
+        let cardCoords = null;
+
+        function stopCardTracking() {
+            if (cardRafId) { cancelAnimationFrame(cardRafId); cardRafId = null; }
+            const card = document.getElementById('assetCard');
+            card.classList.remove('visible');
+            card.style.left = '-9999px';
+            card.style.top  = '-9999px';
+        }
+
+        function startCardTracking(coords) {
+            stopCardTracking();
+            cardCoords = coords;
+            const card = document.getElementById('assetCard');
+
+            function update() {
+                if (!cardCoords) return;
+                const pt = map.project(cardCoords);
+                const cardW = card.offsetWidth  || 320;
+                const cardH = card.offsetHeight || 260;
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                // FIX 2: offset 220px right so card clears the pulse ring entirely; flip left if near edge
+                let cx = pt.x + 220;
+                let cy = pt.y - cardH / 2;
+                if (cx + cardW > vw - 16) cx = pt.x - cardW - 220;
+                if (cy < 16) cy = 16;
+                if (cy + cardH > vh - 16) cy = vh - cardH - 16;
+                card.style.left = cx + 'px';
+                card.style.top  = cy + 'px';
+                cardRafId = requestAnimationFrame(update);
+            }
+            // Give card a frame to render so offsetWidth is real
+            setTimeout(update, 60);
+        }
+
+        // ── DRIVING DISTANCES TO INFRASTRUCTURE ───────────────
+        const infraTargets = [
+            { id: 'dist-airport-syd',  coords: [151.1753, -33.9399] },
+            { id: 'dist-airport-wsyd', coords: [150.8700, -33.9150] },
+            { id: 'dist-port',         coords: [151.2166, -33.9666] },
+            { id: 'dist-moorebank',    coords: [150.9160, -33.9510] }
+        ];
+
+        function clearInfraDist() {
+            infraTargets.forEach(t => {
+                const el = document.getElementById(t.id);
+                if (el) { el.innerHTML = ''; el.classList.remove('loaded'); }
+                const item = el && el.closest('.infra-item');
+                if (item) item.classList.remove('has-dist');
+            });
+        }
+
+        async function fetchDrivingDistances(fromCoords) {
+            clearInfraDist();
+            const token = mapboxgl.accessToken;
+            await Promise.all(infraTargets.map(async target => {
+                const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${fromCoords[0]},${fromCoords[1]};${target.coords[0]},${target.coords[1]}?access_token=${token}&overview=false`;
+                try {
+                    const res  = await fetch(url);
+                    const json = await res.json();
+                    const route = json.routes && json.routes[0];
+                    if (!route) return;
+                    const mins = Math.round(route.duration / 60);
+                    const km   = (route.distance / 1000).toFixed(1);
+                    const timeStr = mins < 60 ? `${mins} min` : `${Math.floor(mins/60)}h ${mins%60}m`;
+                    const el = document.getElementById(target.id);
+                    if (el) {
+                        el.innerHTML = `<div class="infra-dist-time">${timeStr}</div><div class="infra-dist-km">${km} km</div>`;
+                        el.classList.add('loaded');
+                        el.closest('.infra-item').classList.add('has-dist');
+                    }
+                } catch(e) {}
+            }));
+        }
+
+        let activePropertyKey = null;
+
+        window.openProperty = function(propertyKey) {
+            if (viewLevel === 'national') return;
+            activePropertyKey = propertyKey; // mark this as the current active asset
+            const data = propertyData[propertyKey];
+            stopRotation();
+            stopSonarPulse();
+            stopCardTracking();
+            stopTrucks();
+
+            // FIX: clear photo + distances immediately so previous asset doesn't linger
+            const card = document.getElementById('assetCard');
+            const photoEl = document.getElementById('assetCardPhoto');
+            card.classList.remove('visible');
+            photoEl.src = '';
+            photoEl.classList.remove('loaded');
+            clearInfraDist();
+
+            map.flyTo({ center: data.coords, zoom: data.zoom, pitch: data.pitch, bearing: data.bearing, duration: 3000, essential: true });
+            
+            // Stamp this open call — stale moveend callbacks from previous assets are ignored
+            const thisKey = propertyKey;
+            map.once('moveend', () => {
+                if (activePropertyKey !== thisKey) return; // stale — a newer asset was selected
+                startRotation(data.coords);
+                currentPulseCoords = data.coords;
+                const assetNum = assetKeys.indexOf(propertyKey) + 1;
+                startSonarLoop(data.coords, assetNum);
+
+                // Populate text immediately
+                document.getElementById('assetCardName').textContent = data.title;
+                document.getElementById('assetCardSub').textContent = data.sub;
+
+                // Position card off-screen first so RAF loop sets correct position
+                startCardTracking(data.coords);
+
+                // Preload image — only fade in once image is fully loaded (max 2s wait)
+                const photoEl = document.getElementById('assetCardPhoto');
+                photoEl.src = '';
+                photoEl.classList.remove('loaded');
+
+                const revealCard = () => {
+                    if (activePropertyKey !== thisKey) return; // stale
+                    requestAnimationFrame(() => { card.classList.add('visible'); });
+                };
+
+                if (data.photo) {
+                    const img = new Image();
+                    let revealed = false;
+                    const fallback = setTimeout(() => {
+                        if (!revealed) { revealed = true; photoEl.src = data.photo; revealCard(); }
+                    }, 2000);
+                    img.onload = () => {
+                        if (!revealed) {
+                            revealed = true;
+                            clearTimeout(fallback);
+                            photoEl.src = data.photo;
+                            photoEl.classList.add('loaded');
+                            revealCard();
+                        }
+                    };
+                    img.onerror = () => {
+                        if (!revealed) { revealed = true; clearTimeout(fallback); revealCard(); }
+                    };
+                    img.src = data.photo;
+                } else {
+                    revealCard();
+                }
+
+                // Fetch driving distances to all infra
+                fetchDrivingDistances(data.coords);
+            });
+
+            setViewLevel('asset');
+            document.querySelectorAll('.prop-circle, .prop-label').forEach(el => { el.style.opacity = '0'; });
+
+            document.querySelectorAll('.acquired-item').forEach(el => el.classList.remove('active'));
+            const idx = assetKeys.indexOf(propertyKey);
+            const items = document.querySelectorAll('.acquired-item');
+            if (items[idx]) items[idx].classList.add('active');
+        };
+
+        document.getElementById('closePanelBtn').addEventListener('click', () => {
+            document.getElementById('cgiPanel').classList.remove('open');
+            map.flyTo({ center: [151.03281259541, -33.856373488697834], zoom: 11.220382571983798, pitch: 0, bearing: 0, duration: 4000 });
+        });
+
+        function updateDrawerGallery(data) {
+            if (!data) return;
+            document.getElementById('mainCgiImage').src = data.cgis[activeImageIndex];
+            document.querySelectorAll('.thumb').forEach((t, idx) => {
+                if (idx === activeImageIndex) t.classList.add('active');
+                else t.classList.remove('active');
+            });
+        }
+
+        // ── DARK / SATELLITE via keyboard only ────────────────
+        let isSatellite = false; // starts on dark-v11
+
+        const SATELLITE_STYLE = 'mapbox://styles/mapbox/satellite-streets-v12';
+        const DARK_STYLE      = 'mapbox://styles/mapbox/dark-v11';
+
+        function switchMapStyle(toSatellite) {
+            if (isSatellite === toSatellite) return;
+            isSatellite = toSatellite;
+            map.setStyle(toSatellite ? SATELLITE_STYLE : DARK_STYLE);
+            map.once('style.load', () => {
+                const active       = (currentAppView === 'sydney');
+                const lineOpacity  = active ? 0.55 : 0;
+                const labelOpacity = active ? 1    : 0;
+
+                // Repaint native motorway layers
+                map.getStyle().layers.forEach(layer => {
+                    if (layer.type === 'line' && layer['source-layer'] === 'road') {
+                        try {
+                            if (layer.id.includes('motorway') || layer.id.includes('trunk')) {
+                                if (layer.id.includes('case') || layer.id.includes('outline')) {
+                                    map.setPaintProperty(layer.id, 'line-color', '#0a0a0a');
+                                } else {
+                                    map.setPaintProperty(layer.id, 'line-color', '#1c1410');
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                });
+
+                map.addLayer({
+                    'id': 'highlight-highways', 'type': 'line',
+                    'source': 'composite', 'source-layer': 'road',
+                    'filter': ['==', ['get', 'class'], 'motorway'],
+                    'layout': { 'line-cap': 'round', 'line-join': 'round' },
+                    'paint': {
+                        'line-color': '#c8a882',
+                        'line-opacity': lineOpacity,
+                        'line-opacity-transition': { duration: 2500 },
+                        'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 13, 1.5]
+                    }
+                });
+
+                const hwLabelData = { 'type': 'FeatureCollection', 'features': [
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [151.10, -33.78] }, 'properties': { 'label': 'M2' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [150.95, -33.82] }, 'properties': { 'label': 'M4' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [150.95, -33.95] }, 'properties': { 'label': 'M5' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [150.85, -33.85] }, 'properties': { 'label': 'M7' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [151.15, -33.92] }, 'properties': { 'label': 'M8' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [150.75, -33.88] }, 'properties': { 'label': 'M12' } },
+                    { 'type': 'Feature', 'geometry': { 'type': 'Point', 'coordinates': [151.10, -33.72] }, 'properties': { 'label': 'NorthConnex' } }
+                ]};
+                map.addSource('custom-highway-labels', { 'type': 'geojson', 'data': hwLabelData });
+                map.addLayer({
+                    'id': 'highway-labels', 'type': 'symbol', 'source': 'custom-highway-labels',
+                    'layout': { 'text-field': ['get', 'label'], 'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'], 'text-size': 15, 'text-anchor': 'center', 'text-allow-overlap': true, 'text-ignore-placement': true },
+                    'paint': { 'text-color': '#c8a882', 'text-halo-color': 'rgba(0,0,0,0.7)', 'text-halo-width': 1.5, 'text-opacity': labelOpacity, 'text-halo-opacity': labelOpacity }
+                });
+                if (!map.getSource('custom-highlight')) {
+                    map.addSource('custom-highlight', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
