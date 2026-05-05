@@ -364,6 +364,9 @@
             left: 40px; top: 50%; bottom: auto; transform: translateY(-50%);
             background: rgba(0,0,0,0.92); border: 1px solid rgba(255,255,255,0.3);
         }
+        .marker-popup.marker-popup-syd {
+            left: 80px;
+        }
 
         /* --- NATIONAL MACRO CITIES --- */
         .macro-city-wrapper { display: flex; flex-direction: column; align-items: center; opacity: 1; visibility: visible; transition: opacity 1.5s ease, visibility 0s linear 0s; pointer-events: none; }
@@ -814,7 +817,7 @@
         const airportIconHTML = `<img src="panel_icon_syd_airport.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Airport">`;
         const poiData = [
             { lng: 150.9160, lat: -33.9510, icon: trainIconHTML, isCbd: false, isAirport: true }, 
-            { lng: 151.1753, lat: -33.9399, icon: airportIconHTML, isCbd: false, isAirport: true }, 
+            { lng: 151.1630, lat: -33.9399, icon: airportIconHTML, isCbd: false, isAirport: true }, 
             { lng: 150.7416, lat: -33.8800, icon: airportIconHTML, isCbd: false, isAirport: true }, 
             { lng: 151.2166, lat: -33.9666, icon: portIconHTML, isCbd: false, isAirport: true }, 
             { sub: "Parramatta CBD", lng: 151.0011, lat: -33.8150, icon: parramattaCbdIconHTML, isCbd: true, isAirport: true }, 
@@ -826,7 +829,10 @@
             let htmlString = poi.isAirport 
                 ? poi.icon
                 : `<div class="poi-circle${extraClass}">${poi.icon}</div>`;
-            if(poi.isCbd) { htmlString = `<div style="position:absolute;top:0;left:0;">${htmlString}<div class="marker-popup">${poi.sub}</div></div>`; }
+            if(poi.isCbd) {
+                const popupExtraClass = poi.sub === "Sydney CBD" ? ' marker-popup-syd' : '';
+                htmlString = `<div style="position:absolute;top:0;left:0;">${htmlString}<div class="marker-popup${popupExtraClass}">${poi.sub}</div></div>`;
+            }
             el.innerHTML = htmlString;
             new mapboxgl.Marker({ element: el }).setLngLat([poi.lng, poi.lat]).addTo(map);
             if (poi.isCbd) { cbdMarkerElements.push(el); } else { infraMarkerElements.push(el); }
