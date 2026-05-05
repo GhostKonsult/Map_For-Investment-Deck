@@ -487,7 +487,7 @@
                     <div class="infra-dist" id="dist-airport-wsyd"></div>
                 </div>
                 <div class="infra-item" id="infra-port">
-                    <img src="port_icon.png" class="infra-icon" alt="Port">
+                    <img src="panel_icon_port_botany.png" class="infra-icon" alt="Port">
                     <div class="infra-details">
                         <div class="infra-name">Port Botany</div>
                         <div class="infra-sub">Container Terminal</div>
@@ -495,7 +495,7 @@
                     <div class="infra-dist" id="dist-port"></div>
                 </div>
                 <div class="infra-item" id="infra-moorebank">
-                    <img src="train_icon.png" class="infra-icon" alt="Train">
+                    <img src="panel_icon_moorebank.png" class="infra-icon" alt="Train">
                     <div class="infra-details">
                         <div class="infra-name">Moorebank Terminal</div>
                         <div class="infra-sub">Intermodal Freight</div>
@@ -771,10 +771,10 @@
         const infraMarkerElements = [];
         const propertyMarkerElements = [];
 
-        const trainIconHTML = `<img src="train_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Train">`;
+        const trainIconHTML = `<img src="panel_icon_moorebank.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Train">`;
         const planeSVG = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M2.5,19H21.5V21H2.5V19M22.07,9.64C21.86,8.84 21.03,8.36 20.23,8.58L14.92,10L8,3.57H5.73L8.4,11.71L3.46,13L1.6,10.15H0.46L1.87,14.69L20.23,19.5C21.03,19.71 21.86,19.23 22.07,18.43L22.07,9.64Z"/></svg>';
-        const portIconHTML = `<img src="port_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Port">`;
-        const parramattaCbdIconHTML = `<img src="parramatta_cbd_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Parramatta CBD">`;
+        const portIconHTML = `<img src="panel_icon_port_botany.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Port">`;
+        const parramattaCbdIconHTML = `<img src="panel_icon_parramatta.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Parramatta CBD">`;
         const sydneyCbdIconHTML = `<img src="sydney_cbd_icon.png" style="width:var(--infra-icon-size);height:var(--infra-icon-size);border-radius:50%;display:block;transform:translate(-50%,-50%);position:absolute;top:0;left:0;opacity:0;" alt="Sydney CBD">`;
         const truckSVG = '<svg class="gateway-icon" viewBox="0 0 24 24"><path d="M20,8H17V4H3C1.89,4 1,4.89 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8M6,18.5C5.17,18.5 4.5,17.83 4.5,17C4.5,16.17 5.17,15.5 6,15.5C6.83,15.5 7.5,16.17 7.5,17C7.5,17.83 6.83,18.5 6,18.5M18,18.5C17.17,18.5 16.5,17.83 16.5,17C16.5,16.17 17.17,15.5 18,15.5C18.83,15.5 19.5,16.17 19.5,17C19.5,17.83 18.83,18.5 18,18.5M17,12V9.5H19.5L21.47,12H17Z"/></svg>';
 
