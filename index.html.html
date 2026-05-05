@@ -81,8 +81,8 @@
             --panel-logo-w: 416px;
             --prop-pin-size: 44px;
             --prop-pin-font: 17px;
-            --infra-icon-size: 68px;
-            --cbd-icon-size: 68px;
+            --infra-icon-size: 136px;
+            --cbd-icon-size: 136px;
             --asset-card-width: 832px;
         }
 
@@ -93,8 +93,8 @@
                 --panel-logo-w: 364px;
                 --prop-pin-size: 38px;
                 --prop-pin-font: 14px;
-                --infra-icon-size: 56px;
-                --cbd-icon-size: 56px;
+                --infra-icon-size: 112px;
+                --cbd-icon-size: 112px;
                 --asset-card-width: 754px;
             }
         }
@@ -106,8 +106,8 @@
                 --panel-logo-w: 312px;
                 --prop-pin-size: 32px;
                 --prop-pin-font: 12px;
-                --infra-icon-size: 48px;
-                --cbd-icon-size: 48px;
+                --infra-icon-size: 96px;
+                --cbd-icon-size: 96px;
                 --asset-card-width: 676px;
             }
         }
@@ -119,8 +119,8 @@
                 --panel-logo-w: 260px;
                 --prop-pin-size: 28px;
                 --prop-pin-font: 11px;
-                --infra-icon-size: 40px;
-                --cbd-icon-size: 40px;
+                --infra-icon-size: 80px;
+                --cbd-icon-size: 80px;
                 --asset-card-width: 572px;
             }
         }
@@ -366,8 +366,8 @@
         }
 
         /* --- NATIONAL MACRO CITIES --- */
-        .macro-city-wrapper { display: flex; flex-direction: column; align-items: center; opacity: 1; transition: opacity 1.5s ease; pointer-events: none; }
-        .macro-city-wrapper.fade-out { opacity: 0; }
+        .macro-city-wrapper { display: flex; flex-direction: column; align-items: center; opacity: 1; visibility: visible; transition: opacity 1.5s ease, visibility 0s linear 0s; pointer-events: none; }
+        .macro-city-wrapper.fade-out { opacity: 0; visibility: hidden; transition: opacity 1.5s ease, visibility 0s linear 1.5s; }
         
         .macro-city-dot { width: 46px; height: 46px; background-color: var(--accent); border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 15px var(--accent); }
         .macro-city-label { color: #fff; font-size: 34px; font-weight: 700; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
