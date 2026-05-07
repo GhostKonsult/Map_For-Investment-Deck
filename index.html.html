@@ -63,6 +63,46 @@
 
         .top-logo { position: absolute; top: 32px; left: 32px; width: 130px; z-index: 2; pointer-events: none; }
 
+        /* --- ASSET MARKER TOGGLE --- */
+        .marker-toggle {
+            position: fixed; top: 32px; right: 32px; z-index: 150;
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 14px; border-radius: 100px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            cursor: pointer; user-select: none;
+            transition: opacity 0.3s ease;
+        }
+        .marker-toggle-label {
+            font-size: 9px; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+        .marker-toggle:hover .marker-toggle-label { color: var(--text-main); }
+        .marker-toggle-switch {
+            position: relative; width: 32px; height: 18px;
+            background: rgba(255,255,255,0.12); border-radius: 100px;
+            transition: background 0.2s ease;
+        }
+        .marker-toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: #fff; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .marker-toggle.active .marker-toggle-switch { background: var(--accent); }
+        .marker-toggle.active .marker-toggle-switch::after { transform: translateX(14px); }
+        .marker-toggle.active .marker-toggle-label { color: var(--text-main); }
+
+        /* Hide property markers when toggle is off — !important to beat inline opacity styles set by JS */
+        body.markers-hidden .prop-circle,
+        body.markers-hidden .prop-label {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+        body.markers-hidden .marker-anchor { pointer-events: none !important; }
+
         /* --- CINEMATIC TITLE --- */
         .cinematic-title-container {
             position: fixed; top: 45%; left: 80px; right: auto; transform: translateY(-50%);
@@ -458,6 +498,12 @@
     </style>
 </head>
 <body>
+
+    <!-- Asset marker visibility toggle -->
+    <div class="marker-toggle active" id="markerToggle" role="switch" aria-checked="true" tabindex="0">
+        <span class="marker-toggle-label">Assets</span>
+        <span class="marker-toggle-switch"></span>
+    </div>
 
     <div class="cinematic-title-container" id="cinematicTitle">
         <h1 class="cinematic-main">SYDNEY</h1>
@@ -1549,6 +1595,21 @@
                 }
             });
         }
+
+        // ── ASSET MARKER VISIBILITY TOGGLE ──
+        (function setupMarkerToggle() {
+            const toggle = document.getElementById('markerToggle');
+            if (!toggle) return;
+            const flip = () => {
+                const isActive = toggle.classList.toggle('active');
+                document.body.classList.toggle('markers-hidden', !isActive);
+                toggle.setAttribute('aria-checked', isActive ? 'true' : 'false');
+            };
+            toggle.addEventListener('click', flip);
+            toggle.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+            });
+        })();
     </script>
 </body>
 </html>
